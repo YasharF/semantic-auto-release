@@ -20,15 +20,9 @@ jobs:
       - name: Install dependencies
         run: |
           npm ci
-      - name: Build TypeScript types
-        run: |
-          npm run build
       - name: Prettier
         run: |
           npm run prettier:check
-      - name: ESLint
-        run: |
-          npm run lint
 
   dependabot-automerge:
     needs: [static-analysis]

@@ -2,40 +2,31 @@
   "name": "@yasharf/semantic-auto-release",
   "version": "0.0.2",
   "description": "Automated release workflow for JavaScript/TypeScript projects using semantic-release, Conventional Commits, and changelog updates.",
-  "main": "index.js",
+  "license": "BSD-3-Clause",
+  "author": "Yashar Fakhari",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/yasharf/semantic-auto-release.git"
+  },
   "exports": {
     "./commitlint.config": "./commitlint.config.js",
     "./release.config": "./release.config.js"
   },
-  "types": "index.d.ts",
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/sinonjs/samsam.git"
-  },
-  "lint-staged": {
-    "*.{js,css,md}": "prettier --check",
-    "*.js": "eslint"
-  },
+  "main": "index.js",
+  "files": [
+    ".github/workflow/lint_pr.yml",
+    ".github/workflows/ci_auto_release.yml",
+    ".github/workflows/semantic_auto_release.yml",
+    ".husky/commit-msg",
+    "commitlint.config.js",
+    "release.config.js"
+  ],
   "scripts": {
-    "lint": "eslint . ",
-    "prettier:check": "prettier --check '**/*.{js, md, yml}'",
-    "prettier:write": "prettier --write '**/*.{js, md, yml}'",
-    "version": "changes --commits --footer",
-    "postversion": "git push --follow-tags && npm publish --access public",
     "prepare": "husky",
+    "prettier:check": "prettier --check **/*.{js,md,yml} .github/*",
+    "prettier:write": "prettier --write **/*.{js,md,yml} .github/*",
     "test": "echo \"No tests yet\""
   },
-  "author": "Yashar Fakhari",
-  "license": "BSD-3-Clause",
-  "keywords": [
-    "semantic-release",
-    "conventional-commits",
-    "commitlint",
-    "automation",
-    "changelog",
-    "npm-publish",
-    "github-actions"
-  ],
   "dependencies": {
     "@commitlint/cli": "^19.8.1",
     "@commitlint/config-conventional": "^19.8.1",
@@ -51,5 +42,21 @@
     "husky": "^9.1.7",
     "lint-staged": "^16.1.5",
     "prettier": "^3.6.2"
+  },
+  "keywords": [
+    "automation",
+    "changelog",
+    "commitlint",
+    "conventional-commits",
+    "github-actions",
+    "npm-publish",
+    "semantic-release"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
+  "lint-staged": {
+    "**/*.{js,yml,md}": "prettier --check",
+    ".github/*": "prettier --check"
   }
 }

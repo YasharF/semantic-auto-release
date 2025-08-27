@@ -1,4 +1,4 @@
-name: CI Auto Release
+name: CI Auto Release Engine
 
 on:
   workflow_call:
@@ -23,7 +23,7 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: lts/*
           cache: npm
 
       - run: npm ci
@@ -34,7 +34,7 @@ jobs:
       - run: npx semantic-release --no-ci
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          NPM_TOKEN: dummy
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
 
       - id: after
         run: echo "version=$(node -p "require('./package.json').version")" >> "$GITHUB_OUTPUT"
@@ -123,7 +123,7 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: lts/*
           cache: npm
 
       - run: npm ci

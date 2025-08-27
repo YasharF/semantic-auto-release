@@ -3,7 +3,7 @@ const { execSync } = require("child_process");
 
 module.exports = {
     // This is the protected branch the PRs merge into
-    branches: ["auto_release"],
+    branches: ["main"],
     repositoryUrl: execSync("git config --get remote.origin.url")
         .toString()
         .trim(),
