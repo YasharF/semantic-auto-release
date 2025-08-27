@@ -1,0 +1,10 @@
+name: Org Release
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '0 0 1 * *'
+
+jobs:
+  release:
+    uses: yasharf/semantic-autorelease/.github/workflows/release.yml@main
+    secrets: inherit

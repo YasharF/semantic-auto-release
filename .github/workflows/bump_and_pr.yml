@@ -1,0 +1,38 @@
+name: Bump & PR
+
+on:
+  workflow_dispatch:
+
+jobs:
+  bump:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - run: npm ci
+
+      # Run semantic-release in "prepare only" mode
+      - run: npx semantic-release --no-ci
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          NPM_TOKEN: dummy
+
+      - name: Create PR for version bump
+        uses: peter-evans/create-pull-request@v6
+        with:
+          branch: release/bump-${{ github.run_id }}
+          commit-message: "chore(release): version bump [skip ci]"
+          title: "chore(release): version bump"
+          body: "Automated PR for version bump & changelog update."
+          base: auto_release
