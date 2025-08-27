@@ -9,6 +9,7 @@ jobs:
     permissions:
       contents: write
       packages: write
+      issues: write
     env:
       HUSKY: 0
     steps:
