@@ -1,5 +1,13 @@
 # Changes
 
+## [2.0.2](https://github.com/YasharF/semantic-auto-release/compare/v2.0.1...v2.0.2) (2025-08-27)
+
+
+### Bug Fixes
+
+* add issue write permission ([aef9435](https://github.com/YasharF/semantic-auto-release/commit/aef9435f6cc517319e3c5498cd404fdcb0778656))
+* consumers need to have issue:write permission ([7c93ea7](https://github.com/YasharF/semantic-auto-release/commit/7c93ea713d1c13d67ba0d7c4bdb772ba9c60a02e))
+
 ## [2.0.1](https://github.com/YasharF/semantic-auto-release/compare/v2.0.0...v2.0.1) (2025-08-27)
 
 
