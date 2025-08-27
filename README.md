@@ -6,7 +6,7 @@ Automated, secure, direct-to-main semantic release flow for npm packages with Co
 
 - Enforces Conventional Commits (via included commitlint config and optional local Husky hook)
 - Calculates the next version using semantic-release
-- Updates CHANGELOG.md and bumps version in package.json and package-lock.json
+- Updates CHANGES.md and bumps version in package.json and package-lock.json
 - Publishes the package to npm and creates a GitHub Release with changelog notes
 
 ## How to enable in your repo
