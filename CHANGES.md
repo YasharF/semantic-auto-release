@@ -1,5 +1,12 @@
 # Changes
 
+## [2.0.1](https://github.com/YasharF/semantic-auto-release/compare/v2.0.0...v2.0.1) (2025-08-27)
+
+
+### Bug Fixes
+
+* changes not change ([fe3d46a](https://github.com/YasharF/semantic-auto-release/commit/fe3d46a1611125f33c5938fdba6cbc376c99e4b4))
+
 # [2.0.0](https://github.com/YasharF/semantic-auto-release/compare/v1.0.0...v2.0.0) (2025-08-27)
 
 
