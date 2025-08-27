@@ -29,22 +29,23 @@ jobs:
       - run: npm ci
 
       - id: before
-        run: echo "version=$(node -p "require('./package.json').version")" >> "$GITHUB_OUTPUT"
+        run: echo "version=$(node -p \"require('./package.json').version\")" >> "$GITHUB_OUTPUT"
 
-      - run: npx semantic-release --no-ci
+      - run: npx semantic-release --no-ci --extends ./release.config.versionbump.js
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+          NPM_TOKEN: dummy
 
       - id: after
-        run: echo "version=$(node -p "require('./package.json').version")" >> "$GITHUB_OUTPUT"
+        run: echo "version=$(node -p \"require('./package.json').version\")" >> "$GITHUB_OUTPUT"
 
       - if: ${{ steps.before.outputs.version == steps.after.outputs.version }}
         run: |
           echo "No new release detected."
           exit 0
 
-      - env:
+      - name: Push bump branch and open PR
+        env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           VERSION: ${{ steps.after.outputs.version }}
         run: |
@@ -128,7 +129,7 @@ jobs:
 
       - run: npm ci
 
-      - run: npx semantic-release
+      - run: npx semantic-release --no-ci --extends ./release.config.js
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
