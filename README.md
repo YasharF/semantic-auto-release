@@ -36,6 +36,7 @@ jobs:
     permissions:
       contents: write
       packages: write
+      issues: write
     secrets: inherit
 ```
 
