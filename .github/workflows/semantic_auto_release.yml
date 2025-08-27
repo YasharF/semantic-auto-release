@@ -29,15 +29,19 @@ jobs:
       - run: npm ci
 
       - id: before
-        run: echo "version=$(node -p \"require('./package.json').version\")" >> "$GITHUB_OUTPUT"
+        run: |
+          VERSION=$(node -p "require('./package.json').version")
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
 
       - run: npx semantic-release --no-ci --extends ./release.config.versionbump.js
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          NPM_TOKEN: dummy
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
 
       - id: after
-        run: echo "version=$(node -p \"require('./package.json').version\")" >> "$GITHUB_OUTPUT"
+        run: |
+          VERSION=$(node -p "require('./package.json').version")
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
 
       - if: ${{ steps.before.outputs.version == steps.after.outputs.version }}
         run: |
