@@ -1,0 +1,45 @@
+name: Validate & automerge bump PR
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
+
+jobs:
+  validate-and-automerge:
+    if: >
+      github.event.pull_request.user.login == 'github-actions[bot]' &&
+      startsWith(github.event.pull_request.head.ref, 'release/bump-')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: ${{ github.event.pull_request.head.ref }}
+
+      - name: Verify commit authors are automation bot only
+        run: |
+          for author in $(git log --pretty='%an' origin/${{ github.event.pull_request.base.ref }}..HEAD); do
+            if [ "$author" != "github-actions[bot]" ]; then
+              echo "❌ Unauthorized commit author: $author"
+              exit 1
+            fi
+          done
+
+      - name: Check changed files are only release‑related
+        run: |
+          changed=$(git diff --name-only origin/${{ github.event.pull_request.base.ref }}..HEAD)
+          echo "Changed files: $changed"
+          for f in $changed; do
+            case "$f" in
+              package.json|package-lock.json|CHANGELOG.md) ;;
+              *) echo "❌ Unauthorized file change detected: $f" && exit 1 ;;
+            esac
+          done
+
+      - name: Enable auto-merge (squash)
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: gh pr merge --squash --auto ${{ github.event.pull_request.number }}

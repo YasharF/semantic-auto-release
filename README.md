@@ -1,56 +1,82 @@
-# @yasharf/semantic-autorelease
+# semantic-auto-release
 
-Self‑contained semantic‑release + Conventional Commits automation, with a reusable GitHub Actions workflow for org‑wide zero‑drift releases.
+Automated, secure, PR‑based semantic release flow for npm packages with Conventional Commits enforcement.
 
-## 🚀 Features
-- Fully bundled semantic‑release toolchain (no extra installs needed in consumers)
-- Commitlint rules for Conventional Commits
-- Auto‑bump `package.json`, update `CHANGELOG.md`, publish to npm, create GitHub release
-- Reusable workflow for any repo in your org
-- Self‑dogfoods — this package releases itself using its own workflow
+## What it does
+- Enforces Conventional Commits in all PRs
+- Calculates next version via semantic-release
+- Updates CHANGELOG.md, package.json, package-lock.json in main
+- Opens a bump PR to protected main branch
+- Validates commit authors and changed files before merge
+- Auto‑merges the PR when all CI checks pass
+- Publishes the package to npm and creates a GitHub Release
+- Cleans up the temporary bump branch
 
-## 📦 Installation (for consuming repos)
-npm install --save-dev @sinonjs/semantic-autorelease  
-*(Replace scope with @yasharf if testing before transfer.)*
+## How to enable in your repo
 
-## ⚡ Usage (in a consumer repo)
-1. Create `.github/workflows/auto_release.yml`:
+### 1. Install
+npm install --save-dev @sinonjs/semantic-auto-release
 
-   name: Org Release  
-   on:  
-     workflow_dispatch:  
-     schedule:  
-       - cron: '0 0 1 * *'  
+### 2. Create trigger workflow
+Add .github/workflows/org_release.yml:
 
-   jobs:  
-     release:  
-       uses: sinonjs/semantic-autorelease/.github/workflows/release.yml@v1  
-       secrets: inherit
+name: Org Release
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '0 0 1 * *'
 
-2. Ensure the repo has `GITHUB_TOKEN` (default) and `NPM_TOKEN` secrets set.
+jobs:
+  release:
+    uses: sinonjs/semantic-auto-release/bump_and_pr.yml@v1
+    secrets: inherit
 
-## 🔒 Branch Protection Setup
+### 3. Add PR validation and automerge workflow
+Add .github/workflows/release_pr_automerge.yml:
 
-### Option 1 — Allow Direct Push from Workflow
-- In branch protection for your release branch:
-  - Enable "Allow GitHub Actions to bypass required pull requests" **or**  
-    "Allow specified actors to push" (and choose workflows).
-- This allows the workflow to commit version/changelog changes directly.
+name: Validate & automerge bump PR
 
-### Option 2 — PR Mode (No Direct Push Rights)
-If you cannot allow direct pushes:
-1. Use a `bump_and_pr.yml` workflow that:
-   - Runs semantic‑release in prepare‑only mode.
-   - Creates a branch with updated version and changelog.
-   - Opens a PR to your protected release branch.
-2. Review and merge the PR.
-3. A `publish_after_merge.yml` workflow runs semantic‑release in publish‑only mode after merge, creating the GitHub release and publishing to npm.
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
 
-## 🛠 Local Development
-- Lint: `npm run lint`
-- Format: `npm run prettier:write`
-- Dry‑run release: `npx semantic-release --dry-run`
+jobs:
+  automerge:
+    uses: sinonjs/semantic-auto-release/bump_pr_automerge.yml@v1
+    permissions:
+      contents: write
+      pull-requests: write
+    secrets: inherit
 
+### 4. Publish after merge
+Add .github/workflows/publish_after_merge.yml:
 
-## 📄 License
-[LICENSE]
+name: Publish after bump PR merge
+
+on:
+  pull_request:
+    types: [closed]
+    branches:
+      - main
+
+jobs:
+  publish:
+    uses: sinonjs/semantic-auto-release/publish_after_merge.yml@v1
+    permissions:
+      contents: write
+      packages: write
+      pull-requests: read
+    secrets: inherit
+
+## Requirements
+- Branch: main is the base for releases
+- Secrets: NPM_TOKEN with publish rights
+- Branch protection rules: no direct pushes, require status checks before merge
+- Optional: enable "Automatically delete head branches" in repo settings for cleanup
+
+## How it works
+1. Consumer trigger workflow runs on schedule or manually → calls bump_and_pr.yml
+2. bump_and_pr prepares bump commit, opens PR
+3. bump_pr_automerge.yml validates and merges PR when green
+4. publish_after_merge.yml publishes to npm + GitHub
+5. Branch is deleted after success

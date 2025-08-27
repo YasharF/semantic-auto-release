@@ -1,29 +1,10 @@
-name: Semantic Release (Reusable)
-
+name: Release
 on:
-  workflow_call:
-    secrets:
-      GITHUB_TOKEN:
-        required: true
-      NPM_TOKEN:
-        required: true
+  workflow_dispatch:
+  schedule:
+    - cron: '0 0 1 * *'
 
 jobs:
   release:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v5
-        with:
-          fetch-depth: 0
-
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 20
-          cache: npm
-
-      - run: npm ci
-
-      - run: npx semantic-release
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+    uses: ./bump_and_pr.yml
+    secrets: inherit
