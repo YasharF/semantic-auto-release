@@ -17,55 +17,26 @@ Automated, secure, PR‑based semantic release flow for npm packages with Conven
 ### 1. Install
 npm install --save-dev @sinonjs/semantic-auto-release
 
-### 2. Create trigger workflow
-Add .github/workflows/org_release.yml:
+### 2. Create a single trigger workflow
+Add .github/workflows/ci_auto_release.yml:
 
-name: Org Release
+name: CI Auto Release
 on:
   workflow_dispatch:
   schedule:
     - cron: '0 0 1 * *'
-
-jobs:
-  release:
-    uses: sinonjs/semantic-auto-release/bump_and_pr.yml@v1
-    secrets: inherit
-
-### 3. Add PR validation and automerge workflow
-Add .github/workflows/release_pr_automerge.yml:
-
-name: Validate & automerge bump PR
-
-on:
   pull_request:
-    types: [opened, synchronize, reopened, ready_for_review]
-
-jobs:
-  automerge:
-    uses: sinonjs/semantic-auto-release/bump_pr_automerge.yml@v1
-    permissions:
-      contents: write
-      pull-requests: write
-    secrets: inherit
-
-### 4. Publish after merge
-Add .github/workflows/publish_after_merge.yml:
-
-name: Publish after bump PR merge
-
-on:
-  pull_request:
-    types: [closed]
+    types: [opened, synchronize, reopened, ready_for_review, closed]
     branches:
       - main
 
 jobs:
-  publish:
-    uses: sinonjs/semantic-auto-release/publish_after_merge.yml@v1
+  release:
+    uses: sinonjs/semantic-auto-release/semantic_auto_release.yml@v1
     permissions:
       contents: write
+      pull-requests: write
       packages: write
-      pull-requests: read
     secrets: inherit
 
 ## Requirements
@@ -75,8 +46,8 @@ jobs:
 - Optional: enable "Automatically delete head branches" in repo settings for cleanup
 
 ## How it works
-1. Consumer trigger workflow runs on schedule or manually → calls bump_and_pr.yml
-2. bump_and_pr prepares bump commit, opens PR
-3. bump_pr_automerge.yml validates and merges PR when green
-4. publish_after_merge.yml publishes to npm + GitHub
-5. Branch is deleted after success
+1. Trigger runs on schedule or manual dispatch → bump job in semantic_auto_release.yml opens PR
+2. PR events trigger validation and auto‑merge job
+3. PR close/merge into main triggers publish job
+4. Package is tagged, npm published, GitHub Release created
+5. Temporary bump branch is deleted

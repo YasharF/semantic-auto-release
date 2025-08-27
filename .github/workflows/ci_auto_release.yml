@@ -1,0 +1,18 @@
+name: CI Auto Release
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '0 0 1 * *'
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review, closed]
+    branches:
+      - main
+
+jobs:
+  release:
+    uses: ./semantic_auto_release.yml
+    permissions:
+      contents: write
+      pull-requests: write
+      packages: write
+    secrets: inherit

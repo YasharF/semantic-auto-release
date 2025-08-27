@@ -1,0 +1,140 @@
+name: CI Auto Release
+
+on:
+  workflow_call:
+
+jobs:
+  bump-and-pr:
+    if: ${{ github.event_name == 'workflow_dispatch' || github.event_name == 'schedule' }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+    env:
+      HUSKY: 0
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      - run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - run: npm ci
+
+      - id: before
+        run: echo "version=$(node -p "require('./package.json').version")" >> "$GITHUB_OUTPUT"
+
+      - run: npx semantic-release --no-ci
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          NPM_TOKEN: dummy
+
+      - id: after
+        run: echo "version=$(node -p "require('./package.json').version")" >> "$GITHUB_OUTPUT"
+
+      - if: ${{ steps.before.outputs.version == steps.after.outputs.version }}
+        run: |
+          echo "No new release detected."
+          exit 0
+
+      - env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          VERSION: ${{ steps.after.outputs.version }}
+        run: |
+          BRANCH="release/bump-$VERSION"
+          git push origin "HEAD:$BRANCH"
+          gh pr create \
+            --title "chore(release): $VERSION" \
+            --body "Automated bump & changelog update" \
+            --base main \
+            --head "$BRANCH"
+
+  validate-and-automerge:
+    if: >
+      github.event_name == 'pull_request' &&
+      github.event.pull_request.user.login == 'github-actions[bot]' &&
+      startsWith(github.event.pull_request.head.ref, 'release/bump-')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+    env:
+      BASE_REF: ${{ github.event.pull_request.base.ref }}
+      HEAD_REF: ${{ github.event.pull_request.head.ref }}
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+          ref: ${{ env.HEAD_REF }}
+
+      - name: Verify commit authors are automation bot only
+        run: |
+          for author in $(git log --pretty='%an' origin/$BASE_REF..HEAD); do
+            if [ "$author" != "github-actions[bot]" ]; then
+              echo "Error: Unexpected commit author $author"
+              exit 1
+            fi
+          done
+
+      - name: Check changed files are only release-related
+        run: |
+          changed=$(git diff --name-only origin/$BASE_REF..HEAD)
+          echo "Changed files: $changed"
+          for f in $changed; do
+            case "$f" in
+              package.json|package-lock.json|CHANGELOG.md) ;;
+              *) echo "Error: Unexpected file change $f" && exit 1 ;;
+            esac
+          done
+
+      - name: Enable auto-merge (squash)
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+        run: gh pr merge --squash --auto "$PR_NUMBER"
+
+  publish:
+    if: >
+      github.event_name == 'pull_request' &&
+      github.event.action == 'closed' &&
+      github.event.pull_request.merged == true &&
+      startsWith(github.event.pull_request.head.ref, 'release/bump-') &&
+      github.event.pull_request.user.login == 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      packages: write
+      pull-requests: read
+    env:
+      MERGE_SHA: ${{ github.event.pull_request.merge_commit_sha }}
+      BRANCH_TO_DELETE: ${{ github.event.pull_request.head.ref }}
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+          ref: ${{ env.MERGE_SHA }}
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - run: npm ci
+
+      - run: npx semantic-release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      - name: Delete bump branch
+        if: success()
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: gh branch delete "$BRANCH_TO_DELETE" --yes || true
