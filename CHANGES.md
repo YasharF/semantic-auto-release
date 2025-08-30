@@ -1,5 +1,12 @@
 # Changes
 
+## [2.0.4](https://github.com/YasharF/semantic-auto-release/compare/v2.0.3...v2.0.4) (2025-08-30)
+
+
+### Bug Fixes
+
+* potential fix for commitlint config export ([a554b40](https://github.com/YasharF/semantic-auto-release/commit/a554b4036925af9fc5a8e8e565affdf081cf5ae5))
+
 ## [2.0.3](https://github.com/YasharF/semantic-auto-release/compare/v2.0.2...v2.0.3) (2025-08-30)
 
 
