@@ -1,5 +1,12 @@
 # Changes
 
+## [2.0.3](https://github.com/YasharF/semantic-auto-release/compare/v2.0.2...v2.0.3) (2025-08-30)
+
+
+### Bug Fixes
+
+* correct .husky/commit-msg permissions ([40bef93](https://github.com/YasharF/semantic-auto-release/commit/40bef93951e4cc7daafee681918037d8e72f6c4c))
+
 ## [2.0.2](https://github.com/YasharF/semantic-auto-release/compare/v2.0.1...v2.0.2) (2025-08-27)
 
 
