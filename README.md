@@ -1,59 +1,90 @@
 # semantic-auto-release
 
-Automated, secure, direct-to-main semantic release flow for npm packages with Conventional Commits enforcement.
+Automated, secure, PR-based semantic release flow for npm packages using Conventional Commits.  
+Designed for protected `main` branches with zero manual publishing.
 
-## What it does
+## Quick start
 
-- Enforces Conventional Commits (via included commitlint config and optional local Husky hook)
-- Calculates the next version using semantic-release
-- Updates CHANGES.md and bumps version in package.json and package-lock.json
-- Publishes the package to npm and creates a GitHub Release with changelog notes
+1.  **Install the package**
 
-## How to enable in your repo
+    npm install --save-dev @yasharf/semantic-auto-release
 
-### 1. Install
+2.  **Install and initialize Husky**
 
-npm install --save-dev @yasharf/semantic-auto-release
+    npm install --save-dev husky  
+    npx husky init
 
-### 2. Add release config
+3.  **Enable Conventional Commits enforcement**
 
-Copy release.config.js from this package into the root of your repo (or reference it directly if preferred).
+    Add this to your `package.json`:
 
-### 3. Create a trigger workflow
+        "commitlint": {
+          "extends": ["@yasharf/semantic-auto-release/commitlint.config.js"]
+        }
 
-Add .github/workflows/ci_auto_release.yml:
+4.  **Set up the Husky commit-msg hook (shim)**
+
+    Create `.husky/commit-msg` with the following content:
+
+        #!/bin/sh
+        . "$(dirname "$0")/_/husky.sh"
+
+        "$(pwd)/node_modules/@yasharf/semantic-auto-release/.husky/commit-msg" "$@"
+
+    Then make it executable:
+
+        chmod +x .husky/commit-msg
+
+    This delegates to the hook logic inside the package. Updates are picked up automatically when you update the package.
+
+5.  **Add NPM_TOKEN**
+
+    In your repository: Settings → Secrets and variables → Actions → New repository secret  
+    Name: `NPM_TOKEN` (must have publish rights to your package scope)
+
+6.  **Create the trigger workflow**
+
+    Add `.github/workflows/ci_auto_release.yml`:
 
 ```
-name: CI Auto Release
-on:
-  workflow_dispatch:
-  schedule:
-    - cron: "0 0 1 * *"
-
-jobs:
-  release:
-    uses: ./.github/workflows/semantic_auto_release.yml
-    permissions:
-      contents: write
-      packages: write
-      issues: write
-    secrets: inherit
+    name: CI Auto Release
+    on:
+      workflow_dispatch:
+      schedule:
+        - cron: "0 0 1 * *"
+      pull_request:
+        types: [opened, synchronize, reopened, ready_for_review, closed]
+        branches:
+          - main
+      push:
+        branches:
+          - main
+    jobs:
+      release:
+        uses: YasharF/semantic-auto-release/.github/workflows/semantic_auto_release.yml@v1
+        permissions:
+          contents: write
+          pull-requests: write
+          packages: write
+        secrets: inherit
 ```
 
-## Requirements
+7.  **Configure repo settings**
+    - Protect `main` and require PRs before merging
 
-- Branch: main is the base for releases
-- Actions Secrets: NPM_TOKEN with publish rights
-- Workflow permissions: in repository Settings → Actions → General, enable "Read and write permissions" and allow GitHub Actions to create releases
-- Optional: any branch protection can be disabled for fully automated direct pushes
+Commit these changes and push to `main`. Your first automated PR will be created on the next manual trigger or scheduled run.
 
 ## How it works
 
-1. Triggered manually or on schedule.
-2. Workflow checks out main, installs dependencies.
-3. semantic-release analyzes commits since last tag, determines new version, updates changelog and package files.
-4. Commit, tag, npm publish, GitHub Release creation all happen in one job.
+1. **Bump job**: Analyzes commits since the last release, calculates the next version, updates `CHANGES.md` and package files, and opens a PR from a bump branch.
+2. **Validation job**: Ensures only expected files changed and the PR was authored by automation. If valid, it enables auto-merge.
+3. **Publish job**: Runs on merge to `main`. If the bump commit is present, it publishes to npm, creates a GitHub Release, and deletes the bump branch.
+
+## Updating
+
+- The reusable workflow is referenced via a tag in `uses:`. Pin to a major tag (e.g. `@v1`) for stability and update when needed.
+- The Husky hook shim stays the same; updates to hook logic are picked up automatically when you update this package.
 
 ## License
 
-Released under BSD-3 (see LICENSE).
+Released under [BSD-3](LICENSE).
