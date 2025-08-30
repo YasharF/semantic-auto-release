@@ -21,9 +21,7 @@ const basePlugins = [
         { type: "test", release: "patch" },
         { type: "chore", release: false },
       ],
-      parserOpts: {
-        noteKeywords: ["BREAKING CHANGE", "BREAKING CHANGES"],
-      },
+      parserOpts: { noteKeywords: ["BREAKING CHANGE", "BREAKING CHANGES"] },
     },
   ],
   "@semantic-release/release-notes-generator",
@@ -31,25 +29,29 @@ const basePlugins = [
     "@semantic-release/changelog",
     { changelogFile: "CHANGES.md", changelogTitle: "# Changes" },
   ],
-  [
+];
+
+// Only include git commit step in bump mode
+if (phase === "BUMP") {
+  basePlugins.push([
     "@semantic-release/git",
     {
       assets: ["package.json", "package-lock.json", "CHANGES.md"],
       message:
         "chore(release): ${nextRelease.version} [skip ci]\n\n${nextRelease.notes}",
     },
-  ],
-];
+  ]);
+}
 
-const publishPlugins =
-  phase === "PUBLISH"
-    ? ["@semantic-release/npm", "@semantic-release/github"]
-    : [];
+// Only include npm/github publish in publish mode
+if (phase === "PUBLISH") {
+  basePlugins.push("@semantic-release/npm", "@semantic-release/github");
+}
 
 module.exports = {
   branches: [srBranch],
   repositoryUrl: execSync("git config --get remote.origin.url")
     .toString()
     .trim(),
-  plugins: [...basePlugins, ...publishPlugins],
+  plugins: basePlugins,
 };
