@@ -19,7 +19,7 @@ Designed for protected `main` branches with zero manual publishing.
     Add this to your `package.json`:
 
         "commitlint": {
-          "extends": ["@yasharf/semantic-auto-release/commitlint.config.js"]
+          "extends": ["@yasharf/semantic-auto-release/commitlint"]
         }
 
 4.  **Set up the Husky commit-msg hook (shim)**

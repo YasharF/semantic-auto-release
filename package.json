@@ -9,8 +9,8 @@
     "url": "git+https://github.com/yasharf/semantic-auto-release.git"
   },
   "exports": {
-    "./commitlint.config": "./commitlint.config.js",
-    "./release.config": "./release.config.js"
+    "./commitlint": "./commitlint.config.js",
+    "./release": "./release.config.js"
   },
   "main": "index.js",
   "files": [
