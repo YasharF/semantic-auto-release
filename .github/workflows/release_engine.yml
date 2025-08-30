@@ -40,7 +40,8 @@ jobs:
       - name: Run bump phase
         if: ${{ inputs.mode == 'bump' }}
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # for semantic-release
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }} # for github cli
         run: |
           set -euo pipefail
           BRANCH="release/bump-${GITHUB_RUN_NUMBER}-${GITHUB_RUN_ATTEMPT}"
@@ -53,7 +54,6 @@ jobs:
           VERSION="$(node -p "require('./package.json').version")"
 
           gh pr create \
-            --github-token "$GITHUB_TOKEN" \
             --base main \
             --head "${BRANCH}" \
             --title "chore(release): ${VERSION} [skip ci]" \
