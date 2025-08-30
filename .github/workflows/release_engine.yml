@@ -45,11 +45,12 @@ jobs:
           set -euo pipefail
           BRANCH="release/bump-${GITHUB_RUN_NUMBER}-${GITHUB_RUN_ATTEMPT}"
           git checkout -b "${BRANCH}"
+          # Push branch before running semantic-release so it exists on remote
+          git push --set-upstream origin "${BRANCH}"
 
           PHASE="BUMP" SR_BRANCH="${BRANCH}" npx semantic-release --no-ci --extends ./release.config.js
 
           VERSION="$(node -p "require('./package.json').version")"
-          git push --set-upstream origin "${BRANCH}"
 
           gh pr create \
             --github-token "$GITHUB_TOKEN" \
