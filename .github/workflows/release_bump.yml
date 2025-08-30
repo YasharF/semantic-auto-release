@@ -1,14 +1,15 @@
-name: CI Auto Release
+name: "Release: Bump"
+
 on:
   workflow_dispatch:
   schedule:
     - cron: "0 0 1 * *"
 
 jobs:
-  release:
-    uses: ./.github/workflows/semantic_auto_release.yml
+  bump:
+    uses: ./.github/workflows/release_engine.yml
     permissions:
       contents: write
+      pull-requests: write
       packages: write
-      issues: write
     secrets: inherit

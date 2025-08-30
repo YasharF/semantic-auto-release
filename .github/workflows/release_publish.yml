@@ -1,0 +1,15 @@
+name: "Release: Publish"
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  publish:
+    uses: ./.github/workflows/release_engine.yml
+    permissions:
+      contents: write
+      pull-requests: write
+      packages: write
+    secrets: inherit

@@ -27,8 +27,6 @@ Designed for protected `main` branches with zero manual publishing.
     Create `.husky/commit-msg` with the following content:
 
         #!/bin/sh
-        . "$(dirname "$0")/_/husky.sh"
-
         "$(pwd)/node_modules/@yasharf/semantic-auto-release/.husky/commit-msg" "$@"
 
     Then make it executable:
