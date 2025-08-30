@@ -1,0 +1,117 @@
+name: Release Engine
+
+on:
+  workflow_call:
+
+jobs:
+  release:
+    name: Release Engine
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+      packages: write
+    env:
+      HUSKY: 0
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+          persist-credentials: true
+
+      - name: Configure git user
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: lts/*
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      # Phase A: Bump (schedule or workflow_dispatch)
+      - name: Bump prepare and open PR
+        if: github.event_name == 'workflow_dispatch' || github.event_name == 'schedule'
+        shell: bash
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          BRANCH="release/bump-${GITHUB_RUN_NUMBER}-${GITHUB_RUN_ATTEMPT}"
+          git checkout -b "${BRANCH}"
+
+          # Run semantic-release in prepare-only mode (no publish), on the bump branch
+          PHASE="BUMP" SR_BRANCH="${BRANCH}" npx semantic-release --no-ci --extends ./release.config.js
+
+          VERSION="$(node -p "require('./package.json').version")"
+          git push --set-upstream origin "${BRANCH}"
+
+          # Open PR into main
+          gh pr create \
+            --base main \
+            --head "${BRANCH}" \
+            --title "chore(release): ${VERSION} [skip ci]" \
+            --body "Automated release bump PR for ${VERSION}. This PR updates CHANGES.md and package files."
+
+      # Phase B: Validate bump PR (pull_request)
+      - name: Validate bump PR files and author
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const pr = context.payload.pull_request;
+            const expectedAuthor = 'github-actions[bot]';
+            if (pr.user.login !== expectedAuthor) {
+              core.setFailed(`PR author must be ${expectedAuthor}, got ${pr.user.login}`);
+              return;
+            }
+            const { data: files } = await github.pulls.listFiles({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: pr.number,
+              per_page: 100
+            });
+            const allowed = new Set(['CHANGES.md', 'package.json', 'package-lock.json']);
+            const unexpected = files
+              .map(f => f.filename)
+              .filter(f => !allowed.has(f));
+            if (unexpected.length) {
+              core.setFailed(`PR contains unexpected files: ${unexpected.join(', ')}`);
+            }
+
+      - name: Enable auto-merge (squash) if validation passed
+        if: github.event_name == 'pull_request' && success()
+        shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          gh pr merge "${{ github.event.pull_request.number }}" --squash --auto || true
+
+      # Phase C: Publish after merge to main (push)
+      - name: Publish release from main
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: |
+          PHASE="PUBLISH" SR_BRANCH="main" npx semantic-release --no-ci --extends ./release.config.js
+
+      # Optional: delete merged bump branch (best-effort)
+      - name: Delete merged bump branch
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          # Find merged release/bump-* branches and delete them
+          for br in $(git branch -r --merged origin/main | sed 's#origin/##' | grep '^release/bump-'); do
+            gh api -X DELETE "repos/${{ github.repository }}/git/refs/heads/${br}" || true
+          done
