@@ -52,6 +52,7 @@ jobs:
           git push --set-upstream origin "${BRANCH}"
 
           gh pr create \
+            --github-token "$GITHUB_TOKEN" \
             --base main \
             --head "${BRANCH}" \
             --title "chore(release): ${VERSION} [skip ci]" \
