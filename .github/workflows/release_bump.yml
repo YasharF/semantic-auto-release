@@ -1,15 +1,11 @@
 name: "Release: Bump"
-
 on:
   workflow_dispatch:
   schedule:
     - cron: "0 0 1 * *"
-
 jobs:
   bump:
     uses: ./.github/workflows/release_engine.yml
-    permissions:
-      contents: write
-      pull-requests: write
-      packages: write
+    with:
+      mode: bump
     secrets: inherit
