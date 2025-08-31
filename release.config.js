@@ -27,6 +27,7 @@ const basePlugins = [
 ];
 
 if (phase === "BUMP") {
+  // Prepare-only: changelog + git commit
   basePlugins.push(
     [
       "@semantic-release/changelog",
@@ -42,11 +43,12 @@ if (phase === "BUMP") {
     ],
   );
 } else if (phase === "PUBLISH") {
+  // Full publish: npm + GitHub release
   basePlugins.push("@semantic-release/npm", "@semantic-release/github");
 }
 
 module.exports = {
-  // Always set to main so bump mode works even if checked out on bump branch
+  // Always set to main so bump mode calculates version but commits to current branch
   branches: ["main"],
   repositoryUrl: execSync("git config --get remote.origin.url")
     .toString()

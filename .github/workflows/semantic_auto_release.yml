@@ -54,13 +54,16 @@ jobs:
           git branch -a
           git log --oneline -n 5
 
-          echo "=== Running semantic-release in BUMP phase ==="
+          echo "=== Running semantic-release in BUMP phase (no publish plugins) ==="
           PHASE="BUMP" npx semantic-release --no-ci --extends ./release.config.js
 
-          echo "=== DEBUG: Git state AFTER semantic-release ==="
+          echo "=== DEBUG: Git state AFTER semantic-release (before push) ==="
           git status
           git branch -a
           git log --oneline -n 5
+
+          echo "=== Pushing bump branch with release commit ==="
+          git push origin "${BRANCH}"
 
           VERSION="$(node -p "require('./package.json').version")"
 
