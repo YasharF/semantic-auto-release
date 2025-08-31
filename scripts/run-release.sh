@@ -85,4 +85,8 @@ gh release create "v${VERSION}" \
   --notes-file notes.md
 
 echo "=== Cleanup: deleting ephemeral branch from remote ==="
-git push origin --delete "$TEMP_BRANCH" || echo "Warning: could not delete branch $TEMP_BRANCH (it may have already been removed)"
+if git ls-remote --exit-code --heads origin "$TEMP_BRANCH" > /dev/null 2>&1; then
+  git push origin --delete "$TEMP_BRANCH" || echo "Warning: could not delete branch $TEMP_BRANCH"
+else
+  echo "Branch $TEMP_BRANCH already deleted on remote."
+fi
