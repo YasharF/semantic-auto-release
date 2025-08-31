@@ -1,4 +1,4 @@
-name: "Release Engine"
+name: Semantic Auto Release Engine
 
 on:
   workflow_call:
@@ -13,6 +13,7 @@ jobs:
       checks: read
     env:
       HUSKY: 0
+
     steps:
       - name: Checkout
         uses: actions/checkout@v5
@@ -34,103 +35,114 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      # Phase A: Bump (manual or scheduled)
-      - name: Bump prepare and open PR
+      # Step 1: Create release files
+      - name: Create release files
         if: github.event_name == 'workflow_dispatch' || github.event_name == 'schedule'
         env:
+          release_step: create_release_files
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          GH_TOKEN: ${{ secrets.GH_TOKEN || secrets.GITHUB_TOKEN }}
-        shell: bash
         run: |
           set -euo pipefail
           BASE_BRANCH="main"
-          BRANCH="release/bump-${GITHUB_RUN_NUMBER}-${GITHUB_RUN_ATTEMPT}"
+          BRANCH="temp_auto_release_${GITHUB_RUN_NUMBER}_${GITHUB_RUN_ATTEMPT}"
+
+          # Cleanup stale temp branches
+          for b in $(git ls-remote --heads origin "temp_auto_release_*" | awk '{print $2}' | sed 's#refs/heads/##'); do
+            if [ "$b" != "$BRANCH" ]; then
+              git push origin --delete "$b" || true
+            fi
+          done
 
           git checkout -B "${BRANCH}" "origin/${BASE_BRANCH}"
           git push --set-upstream origin "${BRANCH}"
 
-          # Run semantic-release as if bump branch is the release branch
-          PHASE="BUMP" npx semantic-release --no-ci --branches "${BRANCH}" --extends ./release.config.js
+          # Run semantic-release in no-write mode with our export plugin
+          npx semantic-release --no-ci --dry-run --branches "${BRANCH}" --extends ./release.config.js
 
-          # Push the bump branch with the commit
-          git push origin "${BRANCH}"
+          VERSION=$(cat version.txt)
+          NOTES_FILE="notes.md"
 
-          VERSION="$(node -p "require('./package.json').version")"
+          node ./scripts/write-changes-md.js "$VERSION" "$NOTES_FILE"
+          node ./scripts/update-version.js "$VERSION"
+
+          git add CHANGES.md package.json package-lock.json
+          git commit -m "chore(release): ${VERSION}" || true
+          git push origin HEAD
 
           gh pr create \
-            --base "${BASE_BRANCH}" \
-            --head "${BRANCH}" \
+            --base main \
+            --head "$(git branch --show-current)" \
             --title "chore(release): ${VERSION}" \
-            --body "Automated release bump PR for ${VERSION}. This PR updates CHANGES.md and package files."
+            --body "Automated release bump PR for ${VERSION}."
 
-      # Phase B: Validate bump PR on PR events
-      - name: Validate bump PR files and author
-        if: github.event_name == 'pull_request' && startsWith(github.event.pull_request.head.ref, 'release/bump-')
+      # Step 2: Merge release files
+      - name: Validate release PR
+        if: github.event_name == 'pull_request' && startsWith(github.event.pull_request.head.ref, 'temp_auto_release_')
         uses: actions/github-script@v7
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
             const pr = context.payload.pull_request;
-            const expectedAuthor = 'github-actions[bot]';
-            if (pr.user.login !== expectedAuthor) {
-              core.setFailed(`PR author must be ${expectedAuthor}, got ${pr.user.login}`);
-              return;
+            if (pr.user.login !== 'github-actions[bot]') {
+              core.setFailed(`PR author must be github-actions[bot], got ${pr.user.login}`);
             }
-
-      - name: Enable auto-merge (squash)
-        if: github.event_name == 'pull_request' && startsWith(github.event.pull_request.head.ref, 'release/bump-') && success()
-        env:
-          GH_TOKEN: ${{ secrets.GH_TOKEN || secrets.GITHUB_TOKEN }}
-        run: gh pr merge --squash --auto ${{ github.event.pull_request.number }}
-
-      # Phase C: Ensure PR checks passed before publish
-      - name: Ensure PR checks passed
-        if: >
-          github.event_name == 'pull_request' &&
-          github.event.action == 'closed' &&
-          github.event.pull_request.merged == true &&
-          github.event.pull_request.user.login == 'github-actions[bot]' &&
-          startsWith(github.event.pull_request.head.ref, 'release/bump-')
-        uses: actions/github-script@v7
-        with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          script: |
-            const pr = context.payload.pull_request;
-            const { data: combined } = await github.checks.listForRef({
+            const files = await github.rest.pulls.listFiles({
               owner: context.repo.owner,
               repo: context.repo.repo,
-              ref: pr.merge_commit_sha
+              pull_number: pr.number
             });
-            const failing = combined.check_runs.filter(c => c.conclusion !== 'success');
-            if (failing.length > 0) {
-              core.setFailed(`Cannot publish: ${failing.length} check(s) did not succeed.`);
+            const allowed = ['CHANGES.md', 'package.json', 'package-lock.json'];
+            for (const f of files.data) {
+              if (!allowed.includes(f.filename)) {
+                core.setFailed(`Unexpected file changed: ${f.filename}`);
+              }
             }
 
-      - name: Publish release from main
+      - name: Merge release PR
+        if: github.event_name == 'pull_request' && startsWith(github.event.pull_request.head.ref, 'temp_auto_release_') && success()
+        env:
+          GH_TOKEN: ${{ secrets.GH_TOKEN || secrets.GITHUB_TOKEN }}
+        run: gh pr merge --squash ${{ github.event.pull_request.number }}
+
+      # Step 3: Publish package
+      - name: Publish package
         if: >
           github.event_name == 'pull_request' &&
           github.event.action == 'closed' &&
           github.event.pull_request.merged == true &&
           github.event.pull_request.user.login == 'github-actions[bot]' &&
-          startsWith(github.event.pull_request.head.ref, 'release/bump-') &&
-          success()
+          startsWith(github.event.pull_request.head.ref, 'temp_auto_release_')
         env:
+          release_step: publish_package
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
         run: |
           set -euo pipefail
-          PHASE="PUBLISH" npx semantic-release --no-ci --extends ./release.config.js
+          VERSION=$(node -p "require('./package.json').version")
 
-      # Cleanup merged bump branches
-      - name: Delete merged bump branch
+          # Tag in GitHub
+          git fetch origin main
+          git checkout main
+          git pull
+          git tag "v${VERSION}"
+          git push origin "v${VERSION}"
+
+          # Publish to npm
+          npm publish --access public
+
+          # Create GitHub Release
+          gh release create "v${VERSION}" \
+            --title "v${VERSION}" \
+            --notes-file notes.md
+
+      - name: Delete merged temp branch
         if: >
           github.event_name == 'pull_request' &&
           github.event.action == 'closed' &&
           github.event.pull_request.merged == true &&
           github.event.pull_request.user.login == 'github-actions[bot]' &&
-          startsWith(github.event.pull_request.head.ref, 'release/bump-')
+          startsWith(github.event.pull_request.head.ref, 'temp_auto_release_')
         env:
           GH_TOKEN: ${{ secrets.GH_TOKEN || secrets.GITHUB_TOKEN }}
         run: |
-          set -euo pipefail
           gh api -X DELETE "repos/${{ github.repository }}/git/refs/heads/${{ github.event.pull_request.head.ref }}" || true
