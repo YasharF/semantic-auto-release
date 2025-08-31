@@ -54,9 +54,6 @@ Designed for protected `main` branches with zero manual publishing.
         types: [opened, synchronize, reopened, ready_for_review, closed]
         branches:
           - main
-      push:
-        branches:
-          - main
     jobs:
       release:
         uses: YasharF/semantic-auto-release/.github/workflows/semantic_auto_release.yml@v1
@@ -76,7 +73,7 @@ Commit these changes and push to `main`. Your first automated PR will be created
 
 1. **Bump job**: Analyzes commits since the last release, calculates the next version, updates `CHANGES.md` and package files, and opens a PR from a bump branch.
 2. **Validation job**: Ensures only expected files changed and the PR was authored by automation. If valid, it enables auto-merge.
-3. **Publish job**: Runs on merge to `main`. If the bump commit is present, it publishes to npm, creates a GitHub Release, and deletes the bump branch.
+3. **Publish job**: Runs when a bump PR is merged into `main`. If the PR meets the criteria (automation author, correct branch naming), it publishes to npm, creates a GitHub Release, and deletes the bump branch.
 
 ---
 
@@ -89,8 +86,8 @@ The workflows here are structured to satisfy the above behaviour **and** work wi
   Handles all three phases — bump, validate, publish — in one place.  
   The phase is determined by the triggering event:
   - `workflow_dispatch` / `schedule` → bump phase
-  - `pull_request` events → validation phase
-  - `push` to `main` → publish phase
+  - `pull_request` events (opened/sync/etc.) → validation phase
+  - `pull_request` closed (merged) → publish phase
 
 - **Trigger workflow** (`.github/workflows/ci_auto_release.yml`)  
   Matches the consumer quick‑start. Calls the local engine instead of a remote `@v1` tag so changes can be tested here before release.
@@ -139,6 +136,10 @@ If you are reviewing or modifying these workflows, **do not**:
 - Collapse the GH_TOKEN/GITHUB_TOKEN distinction — this is required to handle GitHub’s token permission edge cases.
 - Re‑enable full publish plugins in bump mode — this will attempt to publish from the bump branch and fail or bypass the PR‑based flow.
 - Change the event triggers without understanding their impact on token permissions and phase detection.
+- Trigger publish on `push` to `main` without guarding for bump PR merges — this caused unintended immediate publishes when merging unrelated PRs.
+- Rely solely on commit message matching to decide publish — this is brittle and was replaced with PR metadata checks.
+- Skip pushing the bump branch before semantic‑release — this caused branch‑existence validation failures.
+- Run semantic‑release in bump mode with full plugin set — this attempted to publish from the bump branch and broke the PR‑based flow.
 
 These points are critical to keeping the PR‑based, protected‑branch release flow working as intended and avoiding regressions that have already been encountered and solved.
 

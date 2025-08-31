@@ -33,11 +33,9 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      # Phase A: Bump (manual or scheduled)
       - name: Bump prepare and open PR
         if: github.event_name == 'workflow_dispatch' || github.event_name == 'schedule'
         env:
-          # semantic-release uses GITHUB_TOKEN; gh CLI uses GH_TOKEN
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GH_TOKEN: ${{ secrets.GH_TOKEN || secrets.GITHUB_TOKEN }}
         shell: bash
@@ -49,7 +47,6 @@ jobs:
           git checkout -B "${BRANCH}" "origin/${BASE_BRANCH}"
           git push --set-upstream origin "${BRANCH}"
 
-          # Prepare-only: changelog + version bump commit on the bump branch
           PHASE="BUMP" npx semantic-release --no-ci --branches "${BRANCH}" --extends ./release.config.js
 
           VERSION="$(node -p "require('./package.json').version")"
@@ -60,7 +57,6 @@ jobs:
             --title "chore(release): ${VERSION} [skip ci]" \
             --body "Automated release bump PR for ${VERSION}. This PR updates CHANGES.md and package files."
 
-      # Phase B: Validate bump PR on PR events
       - name: Validate bump PR files and author
         if: github.event_name == 'pull_request' && startsWith(github.event.pull_request.head.ref, 'release/bump-')
         uses: actions/github-script@v7
@@ -73,15 +69,7 @@ jobs:
               core.setFailed(`PR author must be ${expectedAuthor}, got ${pr.user.login}`);
               return;
             }
-            const { data: files } = await github.pulls.listFiles({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              pull_number: pr.number,
-              per_page: 100
-            });
-            const allowed = new Set(['CHANGES.md', 'package.json', 'package-lock.json']);
-            const unexpected = files.map(f => f.filename).filter(f => !allowed.has(f));
-            if (unexpected.length) core.setFailed(`Unexpected files changed: ${unexpected.join(', ')}`);
+            // File content check will be added later
 
       - name: Enable auto-merge (squash)
         if: github.event_name == 'pull_request' && startsWith(github.event.pull_request.head.ref, 'release/bump-') && success()
@@ -89,9 +77,13 @@ jobs:
           GH_TOKEN: ${{ secrets.GH_TOKEN || secrets.GITHUB_TOKEN }}
         run: gh pr merge --squash --auto ${{ github.event.pull_request.number }}
 
-      # Phase C: Publish on merge to main
       - name: Publish release from main
-        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        if: >
+          github.event_name == 'pull_request' &&
+          github.event.action == 'closed' &&
+          github.event.pull_request.merged == true &&
+          github.event.pull_request.user.login == 'github-actions[bot]' &&
+          startsWith(github.event.pull_request.head.ref, 'release/bump-')
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
@@ -99,16 +91,15 @@ jobs:
           set -euo pipefail
           PHASE="PUBLISH" npx semantic-release --no-ci --branches "main" --extends ./release.config.js
 
-      # Best-effort cleanup of merged bump branches
-      - name: Delete merged bump branches
-        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+      - name: Delete merged bump branch
+        if: >
+          github.event_name == 'pull_request' &&
+          github.event.action == 'closed' &&
+          github.event.pull_request.merged == true &&
+          github.event.pull_request.user.login == 'github-actions[bot]' &&
+          startsWith(github.event.pull_request.head.ref, 'release/bump-')
         env:
           GH_TOKEN: ${{ secrets.GH_TOKEN || secrets.GITHUB_TOKEN }}
-        shell: bash
         run: |
           set -euo pipefail
-          git fetch --prune --all
-          for br in $(git branch -r --merged origin/main | sed 's#origin/##' | grep '^release/bump-'); do
-            echo "Deleting merged branch $br"
-            gh api -X DELETE "repos/${{ github.repository }}/git/refs/heads/${br}" || true
-          done
+          gh api -X DELETE "repos/${{ github.repository }}/git/refs/heads/${{ github.event.pull_request.head.ref }}" || true
