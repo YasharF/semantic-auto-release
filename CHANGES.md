@@ -1,3 +1,28 @@
+## 2.2.0 - 2025-08-31
+
+# [2.2.0](https://github.com/YasharF/semantic-auto-release/compare/v2.1.1...v2.2.0) (2025-08-31)
+
+
+### Bug Fixes
+
+* add checks permission to workflow ([c10b6bd](https://github.com/YasharF/semantic-auto-release/commit/c10b6bd77e5878004967fff247ca194d000f58b0))
+* add missing GH_TOKEN, fast fail if unrelated PR ([446c428](https://github.com/YasharF/semantic-auto-release/commit/446c428f4cb22a923c802c67b9f45f10f8e7f3ed))
+* adjust push to main workflow ([0047416](https://github.com/YasharF/semantic-auto-release/commit/0047416ae0506644ae9389f10f32492c1d91e347))
+* don't skip PR checks ([1dd71e7](https://github.com/YasharF/semantic-auto-release/commit/1dd71e72cff33fd879330aa3c6895a9db4cb6b8b))
+* permissions on run-release scirpt ([6e8cd5a](https://github.com/YasharF/semantic-auto-release/commit/6e8cd5adc0512ef4ba9c257f6292a2d459fa786c))
+* push to origin ([e6d3157](https://github.com/YasharF/semantic-auto-release/commit/e6d3157795eb5bf9d681511965a6de4abda981c4))
+* remove tags ([7b227e4](https://github.com/YasharF/semantic-auto-release/commit/7b227e481c750ae382f46795bd5f070c5140a7eb))
+* set github credentials ([c4756a3](https://github.com/YasharF/semantic-auto-release/commit/c4756a3b540116e19ba88cbea3a4c4d76d4d9c33))
+* use proper path for package.json ([eafa942](https://github.com/YasharF/semantic-auto-release/commit/eafa9422770ca57e9beb1a4a92a59f888223bd8c))
+* use temp branch for the local branch ([ee9eaff](https://github.com/YasharF/semantic-auto-release/commit/ee9eaff5ac30c08e5958aea29f3c7c7fc22e9d83))
+
+
+### Features
+
+* update for process using limited semantic-release ([f5228eb](https://github.com/YasharF/semantic-auto-release/commit/f5228ebaafb9585625b36469eeb341fb80438211))
+* use a protected auto_release workflow ([9b57395](https://github.com/YasharF/semantic-auto-release/commit/9b57395a9d864bbed2b6b896c610c89b1161ed9b))
+* use reusable bash script instead of yml ([30c0e8a](https://github.com/YasharF/semantic-auto-release/commit/30c0e8af951e93d23923a26dc3fb0388da681d15))
+
 # Changes
 
 ## [2.1.1](https://github.com/YasharF/semantic-auto-release/compare/v2.1.0...v2.1.1) (2025-08-31)
