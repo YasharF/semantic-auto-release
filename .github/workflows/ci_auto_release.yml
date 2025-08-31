@@ -8,9 +8,6 @@ on:
     types: [opened, synchronize, reopened, ready_for_review, closed]
     branches:
       - main
-  push:
-    branches:
-      - main
 
 jobs:
   release:
