@@ -2,7 +2,6 @@
 const { execSync } = require("child_process");
 
 const phase = process.env.PHASE || "PUBLISH"; // BUMP or PUBLISH
-const srBranch = process.env.SR_BRANCH || "main";
 
 const basePlugins = [
   [
@@ -25,31 +24,30 @@ const basePlugins = [
     },
   ],
   "@semantic-release/release-notes-generator",
-  [
-    "@semantic-release/changelog",
-    { changelogFile: "CHANGES.md", changelogTitle: "# Changes" },
-  ],
 ];
 
-// Only include git commit step in bump mode
 if (phase === "BUMP") {
-  basePlugins.push([
-    "@semantic-release/git",
-    {
-      assets: ["package.json", "package-lock.json", "CHANGES.md"],
-      message:
-        "chore(release): ${nextRelease.version} [skip ci]\n\n${nextRelease.notes}",
-    },
-  ]);
-}
-
-// Only include npm/github publish in publish mode
-if (phase === "PUBLISH") {
+  basePlugins.push(
+    [
+      "@semantic-release/changelog",
+      { changelogFile: "CHANGES.md", changelogTitle: "# Changes" },
+    ],
+    [
+      "@semantic-release/git",
+      {
+        assets: ["package.json", "package-lock.json", "CHANGES.md"],
+        message:
+          "chore(release): ${nextRelease.version} [skip ci]\n\n${nextRelease.notes}",
+      },
+    ],
+  );
+} else if (phase === "PUBLISH") {
   basePlugins.push("@semantic-release/npm", "@semantic-release/github");
 }
 
 module.exports = {
-  branches: [srBranch],
+  // Protected target branch for consumer repos and for this repo
+  branches: ["main"],
   repositoryUrl: execSync("git config --get remote.origin.url")
     .toString()
     .trim(),
