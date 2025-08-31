@@ -1,20 +1,42 @@
-name: "CI Auto Release"
+name: CI Auto Release
 
 on:
   workflow_dispatch:
   schedule:
     - cron: "0 0 1 * *"
-  pull_request:
-    types: [opened, synchronize, reopened, ready_for_review, closed]
-    branches:
-      - main
 
 jobs:
+  prep:
+    name: Prep
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: lts/*
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      # add other steps such as
+      # check lint, test, type build, etc
+      # as applicable
+
   release:
+    name: Release (changelog + version bump PR, merge, publish)
+    needs: [prep]
     uses: ./.github/workflows/semantic_auto_release.yml
     permissions:
-      checks: read
       contents: write
       pull-requests: write
       packages: write
-    secrets: inherit
+    secrets:
+      NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
