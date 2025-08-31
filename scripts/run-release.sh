@@ -5,11 +5,14 @@ set -euo pipefail
 : "${CHANGELOG_FILE:?CHANGELOG_FILE env var is required}"
 : "${RUN_PRETTIER_ON_CHANGELOG:?RUN_PRETTIER_ON_CHANGELOG env var is required}"
 
+# --- Record the base SHA of main before we start ---
+git fetch origin main || true
+BASE_SHA=$(git rev-parse origin/main)
+
 # --- Generate a unique ephemeral branch name for this run ---
 TEMP_BRANCH="temp_release_${GITHUB_RUN_ID}_${GITHUB_RUN_NUMBER}"
 
 echo "=== Creating ephemeral release branch: $TEMP_BRANCH ==="
-git fetch origin main || true
 git checkout -b "$TEMP_BRANCH" origin/main
 
 git config user.name "github-actions[bot]"
@@ -60,9 +63,19 @@ if [[ -n "$PR_NUMBER" ]]; then
   gh pr merge "$PR_NUMBER" --squash
 fi
 
-echo "=== Tagging and publishing ==="
+echo "=== Syncing main branch after merge ==="
 git fetch origin main
 git checkout main
+git pull --ff-only origin main
+
+# --- Check if main has commits beyond our release commit ---
+NEW_COMMITS=$(git rev-list --count "${BASE_SHA}..HEAD")
+if [[ "$NEW_COMMITS" -gt 1 ]]; then
+  echo "ERROR: main has new commits since release calculation. Aborting."
+  exit 1
+fi
+
+echo "=== Tagging and publishing ==="
 git tag "v$VERSION"
 git push origin "v$VERSION"
 
