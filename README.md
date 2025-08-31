@@ -6,9 +6,9 @@ Addresses several shortcomings in standard semantic‑release setups, including:
 
 - Inability to work on repos with a protected default branch that requires a PR
 - Not updating `package.json` and `package-lock.json` versions
-- Not updating `CHANGES.md` in repos
+- Not updating changelog files in repos
 
-No Github personal access tokens (PATs) or admin‑level permissions are required — just add an npm token in your repo's secrets as NPM_TOKEN.
+No GitHub personal access tokens (PATs) or admin‑level permissions are required — just add an npm token in your repo's secrets as `NPM_TOKEN`.
 
 ## Quick start
 
@@ -116,6 +116,8 @@ No Github personal access tokens (PATs) or admin‑level permissions are require
               GITHUB_TOKEN: ${{ github.token }}
               GH_TOKEN: ${{ github.token }}
               NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+              CHANGELOG_FILE: CHANGELOG.md
+              RUN_PRETTIER_ON_CHANGELOG: true
             run: ./node_modules/@yasharf/semantic-auto-release/scripts/run-release.sh
     ```
 
@@ -134,9 +136,11 @@ No Github personal access tokens (PATs) or admin‑level permissions are require
    - `semantic-release` runs in no‑write mode (`--dry-run`) with a custom plugin from this package.
    - The plugin captures `nextRelease.version` and `nextRelease.notes` for subsequent steps.
 
-4. **Generate and commit release files**
+4. **Generate, format, and commit release files**
    - Scripts in this package:
-     - Write `CHANGES.md` with the new release notes.
+     - Write the changelog file specified by `CHANGELOG_FILE` with the new release notes.
+     - Optionally format the changelog file with Prettier if `RUN_PRETTIER_ON_CHANGELOG` is set to `true`.  
+       If Prettier is installed in the repo, its version and config are used; otherwise, the latest Prettier defaults are applied.
      - Update `package.json` and `package-lock.json` with the new version.
    - The changes are committed to the ephemeral branch and a PR is opened to `main`.
 
