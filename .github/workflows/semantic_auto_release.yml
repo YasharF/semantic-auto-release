@@ -10,6 +10,7 @@ jobs:
       contents: write
       pull-requests: write
       packages: write
+      checks: read
     env:
       HUSKY: 0
     steps:
@@ -45,33 +46,19 @@ jobs:
           BASE_BRANCH="main"
           BRANCH="release/bump-${GITHUB_RUN_NUMBER}-${GITHUB_RUN_ATTEMPT}"
 
-          echo "=== Creating bump branch from ${BASE_BRANCH} ==="
           git checkout -B "${BRANCH}" "origin/${BASE_BRANCH}"
           git push --set-upstream origin "${BRANCH}"
 
-          echo "=== DEBUG: Git state BEFORE semantic-release ==="
-          git status
-          git branch -a
-          git log --oneline -n 5
-
-          echo "=== Running semantic-release in BUMP phase (no publish plugins) ==="
           PHASE="BUMP" npx semantic-release --no-ci --extends ./release.config.js
 
-          echo "=== DEBUG: Git state AFTER semantic-release (before push) ==="
-          git status
-          git branch -a
-          git log --oneline -n 5
-
-          echo "=== Pushing bump branch with release commit ==="
           git push origin "${BRANCH}"
 
           VERSION="$(node -p "require('./package.json').version")"
 
-          echo "=== Creating PR for version ${VERSION} ==="
           gh pr create \
             --base "${BASE_BRANCH}" \
             --head "${BRANCH}" \
-            --title "chore(release): ${VERSION} [skip ci]" \
+            --title "chore(release): ${VERSION}" \
             --body "Automated release bump PR for ${VERSION}. This PR updates CHANGES.md and package files."
 
       # Phase B: Validate bump PR on PR events
@@ -87,7 +74,6 @@ jobs:
               core.setFailed(`PR author must be ${expectedAuthor}, got ${pr.user.login}`);
               return;
             }
-            // File content check will be added later
 
       - name: Enable auto-merge (squash)
         if: github.event_name == 'pull_request' && startsWith(github.event.pull_request.head.ref, 'release/bump-') && success()
@@ -96,13 +82,36 @@ jobs:
         run: gh pr merge --squash --auto ${{ github.event.pull_request.number }}
 
       # Phase C: Publish on bump PR merge
-      - name: Publish release from main
+      - name: Ensure PR checks passed
         if: >
           github.event_name == 'pull_request' &&
           github.event.action == 'closed' &&
           github.event.pull_request.merged == true &&
           github.event.pull_request.user.login == 'github-actions[bot]' &&
           startsWith(github.event.pull_request.head.ref, 'release/bump-')
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const pr = context.payload.pull_request;
+            const { data: combined } = await github.checks.listForRef({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              ref: pr.merge_commit_sha
+            });
+            const failing = combined.check_runs.filter(c => c.conclusion !== 'success');
+            if (failing.length > 0) {
+              core.setFailed(`Cannot publish: ${failing.length} check(s) did not succeed.`);
+            }
+
+      - name: Publish release from main
+        if: >
+          github.event_name == 'pull_request' &&
+          github.event.action == 'closed' &&
+          github.event.pull_request.merged == true &&
+          github.event.pull_request.user.login == 'github-actions[bot]' &&
+          startsWith(github.event.pull_request.head.ref, 'release/bump-') &&
+          success()
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
