@@ -1,7 +1,11 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# Generate a unique ephemeral branch name for this run
+# --- Required parameters from env ---
+: "${CHANGELOG_FILE:?CHANGELOG_FILE env var is required}"
+: "${RUN_PRETTIER_ON_CHANGELOG:?RUN_PRETTIER_ON_CHANGELOG env var is required}"
+
+# --- Generate a unique ephemeral branch name for this run ---
 TEMP_BRANCH="temp_release_${GITHUB_RUN_ID}_${GITHUB_RUN_NUMBER}"
 
 echo "=== Creating ephemeral release branch: $TEMP_BRANCH ==="
@@ -22,11 +26,22 @@ if [[ -z "$VERSION" ]]; then
 fi
 NOTES_FILE="notes.md"
 
-echo "=== Updating CHANGES.md and package.json ==="
-node ./scripts/write-changes-md.js "$VERSION" "$NOTES_FILE"
+echo "=== Updating $CHANGELOG_FILE and package.json ==="
+node ./scripts/write-changes-md.js "$VERSION" "$NOTES_FILE" "$CHANGELOG_FILE"
+
+# Optionally run Prettier before staging
+if [[ "$RUN_PRETTIER_ON_CHANGELOG" == "true" ]]; then
+  echo "=== Formatting $CHANGELOG_FILE with Prettier ==="
+  if npx --no-install prettier --version > /dev/null 2>&1; then
+    npx --no-install prettier --write "$CHANGELOG_FILE"
+  else
+    npx prettier --write "$CHANGELOG_FILE"
+  fi
+fi
+
 node ./scripts/update-version.js "$VERSION"
 
-git add CHANGES.md package.json package-lock.json 2> /dev/null || git add CHANGES.md package.json
+git add "$CHANGELOG_FILE" package.json package-lock.json 2> /dev/null || git add "$CHANGELOG_FILE" package.json
 git commit -m "chore(release): ${VERSION}" || true
 
 echo "=== Pushing ephemeral branch ==="
