@@ -51,6 +51,13 @@ jobs:
 
           PHASE="BUMP" npx semantic-release --no-ci --extends ./release.config.js
 
+          # Remove any tag semantic-release just created so it won't be pushed
+          if git describe --tags --exact-match >/dev/null 2>&1; then
+            TAG=$(git describe --tags --exact-match)
+            echo "Removing local tag $TAG to avoid pushing it in bump mode"
+            git tag -d "$TAG"
+          fi
+
           git push origin "${BRANCH}"
 
           VERSION="$(node -p "require('./package.json').version")"
