@@ -1,3 +1,12 @@
+## 2.2.2 - 2025-08-31
+
+## [2.2.2](https://github.com/YasharF/semantic-auto-release/compare/v2.2.1...v2.2.2) (2025-08-31)
+
+
+### Bug Fixes
+
+* set .npmrc if needed ([a42027e](https://github.com/YasharF/semantic-auto-release/commit/a42027ee4e93486fa7ca3f2a3782747796423a13))
+
 ## 2.2.1 - 2025-08-31
 
 ## [2.2.1](https://github.com/YasharF/semantic-auto-release/compare/v2.2.0...v2.2.1) (2025-08-31)
