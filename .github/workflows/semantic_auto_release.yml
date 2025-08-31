@@ -5,6 +5,13 @@ on:
 
 jobs:
   release:
+    if: >
+      github.event_name == 'workflow_dispatch' ||
+      github.event_name == 'schedule' ||
+      (
+        github.event_name == 'pull_request' &&
+        github.event.pull_request.head.ref == format('temp_auto_release_{0}_{1}', github.run_number, github.run_attempt)
+      )
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -39,6 +46,7 @@ jobs:
         if: github.event_name == 'workflow_dispatch' || github.event_name == 'schedule'
         env:
           release_step: create_release_files
+          GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
           EXPECTED_BRANCH="temp_auto_release_${GITHUB_RUN_NUMBER}_${GITHUB_RUN_ATTEMPT}"
@@ -65,6 +73,8 @@ jobs:
 
           git add CHANGES.md package.json package-lock.json
           git commit -m "chore(release): ${VERSION}" || true
+
+          # Push branch only after committing changes
           git push --set-upstream origin "${EXPECTED_BRANCH}"
 
           gh pr create \
@@ -82,9 +92,11 @@ jobs:
         with:
           script: |
             const pr = context.payload.pull_request;
+
             if (pr.user.login !== 'github-actions[bot]') {
               core.setFailed(`PR author must be github-actions[bot], got ${pr.user.login}`);
             }
+
             const files = await github.rest.pulls.listFiles({
               owner: context.repo.owner,
               repo: context.repo.repo,
@@ -102,6 +114,8 @@ jobs:
           github.event_name == 'pull_request' &&
           github.event.pull_request.head.ref == format('temp_auto_release_{0}_{1}', github.run_number, github.run_attempt) &&
           success()
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: gh pr merge --squash ${{ github.event.pull_request.number }}
 
       # Step 3: Publish package
@@ -114,6 +128,7 @@ jobs:
           github.event.pull_request.head.ref == format('temp_auto_release_{0}_{1}', github.run_number, github.run_attempt)
         env:
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+          GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
           VERSION=$(node -p "require('./package.json').version")
@@ -140,5 +155,7 @@ jobs:
           github.event.pull_request.merged == true &&
           github.event.pull_request.user.login == 'github-actions[bot]' &&
           github.event.pull_request.head.ref == format('temp_auto_release_{0}_{1}', github.run_number, github.run_attempt)
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: |
           gh api -X DELETE "repos/${{ github.repository }}/git/refs/heads/${{ github.event.pull_request.head.ref }}" || true
