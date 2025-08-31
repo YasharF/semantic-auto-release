@@ -1,8 +1,14 @@
 # semantic-auto-release
 
-Automated, secure, PR‑based semantic release flow for npm packages using Conventional Commits.  
-Designed for protected main branches with zero manual publishing, using a permanent, bot‑only staging branch for safe versioning and changelog generation.  
-No personal access tokens (PATs) or admin‑level permissions are required — just a one‑time branch protection setup in the GitHub UI.
+Automated semantic release flow for npm packages using Conventional Commits
+
+Addresses several shortcomings in standard semantic‑release setups, including:
+
+- Inability to work on repos with a protected default branch that requires a PR
+- Not updating `package.json` and `package-lock.json` versions
+- Not updating `CHANGES.md` in repos
+
+No Github personal access tokens (PATs) or admin‑level permissions are required — just add an npm token in your repo's secrets as NPM_TOKEN.
 
 ## Quick start
 
@@ -56,27 +62,9 @@ No personal access tokens (PATs) or admin‑level permissions are required — j
     In your repository: Settings → Actions → General → Workflow permissions →  
     Check “Allow GitHub Actions to create and approve pull requests”.
 
-7.  Create and protect the staging branch
-    - Create a permanent branch named `auto-release-staging` off main. For example:
+7.  (Recommended) Protect your main branch
 
-      ```bash
-      git checkout main
-      git pull
-      git checkout -b auto-release-staging
-      git push -u origin auto-release-staging
-      ```
-
-    - Protect it: Settings → Branches → Add branch protection rule
-      - Branch name pattern: `auto-release-staging`
-      - Enable “Restrict who can push to matching branches”
-      - Add `github-actions[bot]` to the allowed list
-      - Do not require PRs or checks for this branch — it is automation‑only
-
-    This branch will be used for all automated release PRs.
-
-8.  (Recommended) Protect your main branch
-
-    If you don’t already have branch protection on your default branch and would like to enable it:
+    If you don't already have branch protection on your default branch and would like to enable it:
     - Settings → Branches → Add branch protection rule
       - Branch name pattern: `main` (or your default branch)
       - Require a pull request before merging
@@ -85,7 +73,7 @@ No personal access tokens (PATs) or admin‑level permissions are required — j
 
     We highly recommend protecting the main branch to ensure only validated changes are merged.
 
-9.  Create the trigger workflow (consumer‑owned prep + release script step)
+8.  Create the trigger workflow (consumer‑owned prep + release script step)
 
     Add `.github/workflows/ci_auto_release.yml` and add your custom steps such as lint check, tests, builds, etc.:
 
@@ -106,11 +94,9 @@ No personal access tokens (PATs) or admin‑level permissions are required — j
           packages: write
         env:
           HUSKY: 0
-          GITHUB_TOKEN: ${{ github.token }}
-          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
         steps:
           - name: Checkout
-            uses: actions/checkout@v4
+            uses: actions/checkout@v5
             with:
               fetch-depth: 0
 
@@ -125,7 +111,11 @@ No personal access tokens (PATs) or admin‑level permissions are required — j
 
           # add other steps such as lint, test, type build, etc.
 
-          - name: Run release
+          - name: Run release script
+            env:
+              GITHUB_TOKEN: ${{ github.token }}
+              GH_TOKEN: ${{ github.token }}
+              NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
             run: ./node_modules/@yasharf/semantic-auto-release/scripts/run-release.sh
     ```
 
@@ -134,11 +124,11 @@ No personal access tokens (PATs) or admin‑level permissions are required — j
 ## How it works
 
 1. **Prep and release run in the same job**
-   - The consumer’s workflow runs all prep steps (checkout, install, build/test/lint) and then calls the release script from this package as the final step.
+   - The consumer's workflow runs all prep steps (checkout, install, build/test/lint) and then calls the release script from this package as the final step.
    - This ensures the same runner instance is used, so the repo, installed dependencies, and any build artifacts are preserved.
 
-2. **Reset staging branch**
-   - The release script hard‑resets `auto-release-staging` to the latest `main` to ensure a clean base.
+2. **Create a short‑lived release branch**
+   - The release script generates a unique branch name for the run (e.g. `temp_release_<run_id>_<run_number>`) from the latest `main`.
 
 3. **Calculate release data**
    - `semantic-release` runs in no‑write mode (`--dry-run`) with a custom plugin from this package.
@@ -148,27 +138,15 @@ No personal access tokens (PATs) or admin‑level permissions are required — j
    - Scripts in this package:
      - Write `CHANGES.md` with the new release notes.
      - Update `package.json` and `package-lock.json` with the new version.
-   - The changes are committed to `auto-release-staging` and a PR is opened to `main`.
+   - The changes are committed to the ephemeral branch and a PR is opened to `main`.
 
 5. **Merge and publish**
    - The script merges the PR containing the changelog and version bump into `main`, then tags, publishes to npm, and creates a GitHub Release.
+   - Overwrites `.npmrc` npm credentials with `NPM_TOKEN` to ensure authentication to the npm registry.  
+     **Note:** If you have unusual `.npmrc` customizations, be aware that the script may overwrite conflicting auth lines.
 
-## About the auto-release-staging branch
-
-- This branch is permanent and automation‑only.
-- It is hard‑reset to main on each release run.
-- Do not push commits to this branch — changes will be lost and may disrupt publishing.
-
-## Notes to maintainers
-
-- Running prep and release as separate jobs caused the release job to start on a fresh runner, losing all state from prep (repo checkout, installed packages, build artifacts). This broke builds that relied on prep outputs. The fix is to run prep and release in the same job so state is preserved.
-- The prep steps are consumer‑owned, but checkout and install dependencies are required so the release script can run correctly. Beyond that, consumers decide their own build/test/type steps.
-- There is no secure way to use an unprotected staging branch for releases — even if you validate PR author, branch name, or commit info. Those checks can be bypassed or invalidated between validation and merge. Restricting who can push to `auto-release-staging` is required for security.
-- Do not trigger publish on push to main without guarding for release PR merges — this caused unintended publishes.
-- Do not collapse the `GH_TOKEN` / `GITHUB_TOKEN` distinction — `gh` CLI uses `GH_TOKEN`; `@semantic-release/github` uses `GITHUB_TOKEN`.
-- `semantic-release` does not push branches — the release script pushes `auto-release-staging` before opening the PR.
-- `semantic-release` does not update `CHANGES.md` when run with `--dry-run` — `CHANGES.md` is generated from `nextRelease.notes`.
-- `semantic-release` does not update `package.json` by itself — the release script writes the version once it is determined.
+6. **Cleanup**
+   - Deletes the ephemeral branch from the remote repository after the PR is merged, in case the repo isn't set to automatically delete PR branches.
 
 ## License
 
