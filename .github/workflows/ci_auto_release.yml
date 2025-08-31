@@ -35,4 +35,8 @@ jobs:
       # as applicable
 
       - name: Run release script
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          GH_TOKEN: ${{ github.token }}
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
         run: ./scripts/run-release.sh
