@@ -48,7 +48,7 @@ if (phase === "BUMP") {
 
 module.exports = {
   branches: ["main"],
-  tagFormat: phase === "BUMP" ? false : "v${version}",
+  tagFormat: "v${version}",
   repositoryUrl: execSync("git config --get remote.origin.url")
     .toString()
     .trim(),
