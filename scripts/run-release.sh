@@ -13,9 +13,11 @@ else
 fi
 git reset --hard origin/main
 
+git config user.name "github-actions[bot]"
+git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
 echo "=== Running semantic-release dry-run with export plugin ==="
 export release_step=create_release_files
-export GH_TOKEN="${GITHUB_TOKEN:-}"
 npx semantic-release --no-ci --dry-run --extends ./release.config.js
 
 VERSION=$(cat version.txt)
