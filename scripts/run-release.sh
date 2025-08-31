@@ -55,6 +55,18 @@ git fetch origin main
 git checkout main
 git tag "v$VERSION"
 git push origin "v$VERSION"
+
+# Remove any conflicting auth from project-level .npmrc
+if [ -f .npmrc ]; then
+  grep -v '//registry.npmjs.org/:_authToken=' .npmrc > .npmrc.tmp && mv .npmrc.tmp .npmrc
+fi
+# Append our auth to user-level npmrc
+cat << EOF >> ~/.npmrc
+registry=https://registry.npmjs.org/
+always-auth=true
+//registry.npmjs.org/:_authToken=${NODE_AUTH_TOKEN}
+EOF
+
 npm publish --access public
 
 echo "=== Creating GitHub Release ==="
