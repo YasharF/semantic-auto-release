@@ -13,6 +13,7 @@ jobs:
   release:
     uses: ./.github/workflows/semantic_auto_release.yml
     permissions:
+      checks: read
       contents: write
       pull-requests: write
       packages: write
