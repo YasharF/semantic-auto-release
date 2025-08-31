@@ -1,3 +1,56 @@
+## 1.0.0 - 2025-08-31
+
+# 1.0.0 (2025-08-31)
+
+
+* feat!: remove pr version bump process ([70781f8](https://github.com/YasharF/semantic-auto-release/commit/70781f83d2e2ae86f73cb9e58c6dc219ce7d5d01))
+
+
+### Bug Fixes
+
+* add checks permission to workflow ([c10b6bd](https://github.com/YasharF/semantic-auto-release/commit/c10b6bd77e5878004967fff247ca194d000f58b0))
+* add issue write permission ([aef9435](https://github.com/YasharF/semantic-auto-release/commit/aef9435f6cc517319e3c5498cd404fdcb0778656))
+* add missing GH_TOKEN, fast fail if unrelated PR ([446c428](https://github.com/YasharF/semantic-auto-release/commit/446c428f4cb22a923c802c67b9f45f10f8e7f3ed))
+* add missing permissions and credentials ([2693ab6](https://github.com/YasharF/semantic-auto-release/commit/2693ab61ad52550e245f5a300eb83b9cb106cc0c))
+* adjust push to main workflow ([0047416](https://github.com/YasharF/semantic-auto-release/commit/0047416ae0506644ae9389f10f32492c1d91e347))
+* changes not change ([fe3d46a](https://github.com/YasharF/semantic-auto-release/commit/fe3d46a1611125f33c5938fdba6cbc376c99e4b4))
+* consumers need to have issue:write permission ([7c93ea7](https://github.com/YasharF/semantic-auto-release/commit/7c93ea713d1c13d67ba0d7c4bdb772ba9c60a02e))
+* correct .husky/commit-msg permissions ([40bef93](https://github.com/YasharF/semantic-auto-release/commit/40bef93951e4cc7daafee681918037d8e72f6c4c))
+* don't skip PR checks ([1dd71e7](https://github.com/YasharF/semantic-auto-release/commit/1dd71e72cff33fd879330aa3c6895a9db4cb6b8b))
+* permissions on run-release scirpt ([6e8cd5a](https://github.com/YasharF/semantic-auto-release/commit/6e8cd5adc0512ef4ba9c257f6292a2d459fa786c))
+* potential fix for commitlint config export ([a554b40](https://github.com/YasharF/semantic-auto-release/commit/a554b4036925af9fc5a8e8e565affdf081cf5ae5))
+* pr before merge for publish ver update ([d33c2c4](https://github.com/YasharF/semantic-auto-release/commit/d33c2c406dba1fa40fe1cad201dc2189a491ebd5))
+* push before semantic-release ([d3fb64d](https://github.com/YasharF/semantic-auto-release/commit/d3fb64d472e32083f74e00755d77fbc751a26cb3))
+* push to origin ([e6d3157](https://github.com/YasharF/semantic-auto-release/commit/e6d3157795eb5bf9d681511965a6de4abda981c4))
+* remove tags ([7b227e4](https://github.com/YasharF/semantic-auto-release/commit/7b227e481c750ae382f46795bd5f070c5140a7eb))
+* set .npmrc if needed ([a42027e](https://github.com/YasharF/semantic-auto-release/commit/a42027ee4e93486fa7ca3f2a3782747796423a13))
+* set github credentials ([c4756a3](https://github.com/YasharF/semantic-auto-release/commit/c4756a3b540116e19ba88cbea3a4c4d76d4d9c33))
+* set NODE_AUTH_TOKEN env variable ([c02077c](https://github.com/YasharF/semantic-auto-release/commit/c02077c6d1d10a256ab6004ef14033999fbcbd5e))
+* syntax error ([579aa44](https://github.com/YasharF/semantic-auto-release/commit/579aa444643f07149843ff9c259a21a6dbbed7ce))
+* trigger and PR workflow ([b7830e4](https://github.com/YasharF/semantic-auto-release/commit/b7830e4b4d181075937d5f08fefe1ec838ffdc08))
+* use GH_TOKEN for Github CLI ([4aec16f](https://github.com/YasharF/semantic-auto-release/commit/4aec16fce7e07726d06d8fb1c4bf020b5ffe53ee))
+* use main when calculating versions ([8367e42](https://github.com/YasharF/semantic-auto-release/commit/8367e42f6060a69bf1bfef84a94cd3705b70ae11))
+* use pr close instead of push for publish ([7c097cd](https://github.com/YasharF/semantic-auto-release/commit/7c097cd98095ec46c89638fb13152dd8abeaba81))
+* use proper path for package.json ([eafa942](https://github.com/YasharF/semantic-auto-release/commit/eafa9422770ca57e9beb1a4a92a59f888223bd8c))
+* use temp branch for the local branch ([ee9eaff](https://github.com/YasharF/semantic-auto-release/commit/ee9eaff5ac30c08e5958aea29f3c7c7fc22e9d83))
+
+
+### Features
+
+* customize changelog name and format ([839bf67](https://github.com/YasharF/semantic-auto-release/commit/839bf6766fae3ad4038a9180fdaa3fedd6b1ee94))
+* rename CHANGELOG.md to CHANGES.md ([90982b0](https://github.com/YasharF/semantic-auto-release/commit/90982b039ff01f1ce43ccb62d2dd581b02c9fb79))
+* rewite to handle token permission scopes ([8bda65a](https://github.com/YasharF/semantic-auto-release/commit/8bda65a8c79eb933b45174ab605ee9ea30ba1d89))
+* single file yml distribution ([95c3488](https://github.com/YasharF/semantic-auto-release/commit/95c34880e6cdf5d6e6b63931671ca1978636c3fa))
+* update for process using limited semantic-release ([f5228eb](https://github.com/YasharF/semantic-auto-release/commit/f5228ebaafb9585625b36469eeb341fb80438211))
+* use a ephemeral branch ([09057d6](https://github.com/YasharF/semantic-auto-release/commit/09057d6a10d8f7cb2db4a29bddbfd9d002ad3232))
+* use a protected auto_release workflow ([9b57395](https://github.com/YasharF/semantic-auto-release/commit/9b57395a9d864bbed2b6b896c610c89b1161ed9b))
+* use reusable bash script instead of yml ([30c0e8a](https://github.com/YasharF/semantic-auto-release/commit/30c0e8af951e93d23923a26dc3fb0388da681d15))
+
+
+### BREAKING CHANGES
+
+* This is a full overhaul. Read Readme for current usage.
+
 ## 2.2.2 - 2025-08-31
 
 ## [2.2.2](https://github.com/YasharF/semantic-auto-release/compare/v2.2.1...v2.2.2) (2025-08-31)
