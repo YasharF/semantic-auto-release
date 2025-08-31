@@ -1,3 +1,12 @@
+## 2.2.1 - 2025-08-31
+
+## [2.2.1](https://github.com/YasharF/semantic-auto-release/compare/v2.2.0...v2.2.1) (2025-08-31)
+
+
+### Bug Fixes
+
+* set NODE_AUTH_TOKEN env variable ([c02077c](https://github.com/YasharF/semantic-auto-release/commit/c02077c6d1d10a256ab6004ef14033999fbcbd5e))
+
 ## 2.2.0 - 2025-08-31
 
 # [2.2.0](https://github.com/YasharF/semantic-auto-release/compare/v2.1.1...v2.2.0) (2025-08-31)
