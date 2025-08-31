@@ -1,3 +1,17 @@
+## 1.1.0 - 2025-08-31
+
+# [1.1.0](https://github.com/YasharF/semantic-auto-release/compare/v1.0.1...v1.1.0) (2025-08-31)
+
+
+### Bug Fixes
+
+* sync main branch after merge ([0133b71](https://github.com/YasharF/semantic-auto-release/commit/0133b71c5e69aa7ac53e79e1043bf5d581af82bd))
+
+
+### Features
+
+* support default branchs other than main ([0ce7f27](https://github.com/YasharF/semantic-auto-release/commit/0ce7f27bba034ce06e37cbfaeb9e7d87eb6b854d))
+
 ## 1.0.1 - 2025-08-31
 
 ## [1.0.1](https://github.com/YasharF/semantic-auto-release/compare/v1.0.0...v1.0.1) (2025-08-31)
