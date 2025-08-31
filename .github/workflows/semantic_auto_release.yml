@@ -49,15 +49,10 @@ jobs:
           git checkout -B "${BRANCH}" "origin/${BASE_BRANCH}"
           git push --set-upstream origin "${BRANCH}"
 
-          PHASE="BUMP" npx semantic-release --no-ci --extends ./release.config.js
+          # Run semantic-release as if bump branch is the release branch
+          PHASE="BUMP" npx semantic-release --no-ci --branches "${BRANCH}" --extends ./release.config.js
 
-          # Remove any tag semantic-release just created so it won't be pushed
-          if git describe --tags --exact-match >/dev/null 2>&1; then
-            TAG=$(git describe --tags --exact-match)
-            echo "Removing local tag $TAG to avoid pushing it in bump mode"
-            git tag -d "$TAG"
-          fi
-
+          # Push the bump branch with the commit
           git push origin "${BRANCH}"
 
           VERSION="$(node -p "require('./package.json').version")"
@@ -88,7 +83,7 @@ jobs:
           GH_TOKEN: ${{ secrets.GH_TOKEN || secrets.GITHUB_TOKEN }}
         run: gh pr merge --squash --auto ${{ github.event.pull_request.number }}
 
-      # Phase C: Publish on bump PR merge
+      # Phase C: Ensure PR checks passed before publish
       - name: Ensure PR checks passed
         if: >
           github.event_name == 'pull_request' &&
