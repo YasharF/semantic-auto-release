@@ -46,7 +46,7 @@ if (phase === "BUMP") {
 }
 
 module.exports = {
-  // Protected target branch for consumer repos and for this repo
+  // Always set to main so bump mode works even if checked out on bump branch
   branches: ["main"],
   repositoryUrl: execSync("git config --get remote.origin.url")
     .toString()
