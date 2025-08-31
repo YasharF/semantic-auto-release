@@ -20,14 +20,15 @@
     ".husky/commit-msg",
     "commitlint.config.js",
     "release.config.js",
+    "scripts/run-release.sh",
     "scripts/write-changes-md.js",
     "scripts/update-version.js",
     "plugins/export-data.js"
   ],
   "scripts": {
     "prepare": "husky",
-    "prettier:check": "prettier --check **/*.{js,md,yml} .github/*",
-    "prettier:write": "prettier --write **/*.{js,md,yml} .github/*",
+    "prettier:check": "prettier --check **/*.{js,md,yml,sh} .github/*",
+    "prettier:write": "prettier --write **/*.{js,md,yml,sh} .github/*",
     "test": "echo \"No tests yet\""
   },
   "dependencies": {
@@ -40,7 +41,8 @@
   "devDependencies": {
     "husky": "^9.1.7",
     "lint-staged": "^16.1.5",
-    "prettier": "^3.6.2"
+    "prettier": "^3.6.2",
+    "prettier-plugin-sh": "^0.18.0"
   },
   "keywords": [
     "automation",

@@ -6,11 +6,15 @@ on:
     - cron: "0 0 1 * *"
 
 jobs:
-  prep:
-    name: Prep
+  release:
+    name: Prep + Release
     runs-on: ubuntu-latest
     permissions:
-      contents: read
+      contents: write
+      pull-requests: write
+      packages: write
+    env:
+      HUSKY: 0
     steps:
       - name: Checkout
         uses: actions/checkout@v5
@@ -30,13 +34,5 @@ jobs:
       # check lint, test, type build, etc
       # as applicable
 
-  release:
-    name: Release (changelog + version bump PR, merge, publish)
-    needs: [prep]
-    uses: ./.github/workflows/semantic_auto_release.yml
-    permissions:
-      contents: write
-      pull-requests: write
-      packages: write
-    secrets:
-      NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+      - name: Run release script
+        run: ./scripts/run-release.sh
