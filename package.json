@@ -1,6 +1,6 @@
 {
   "name": "@yasharf/semantic-auto-release",
-  "version": "2.2.1",
+  "version": "2.2.2",
   "description": "Automated release workflow for JavaScript/TypeScript projects using semantic-release, Conventional Commits, and changelog updates.",
   "license": "BSD-3-Clause",
   "author": "Yashar Fakhari",
