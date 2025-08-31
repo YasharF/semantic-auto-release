@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 const fs = require("fs");
+const path = require("path");
 
 const version = process.argv[2];
 if (!version) {
@@ -7,8 +8,8 @@ if (!version) {
   process.exit(1);
 }
 
-const pkgPath = "./package.json";
-const lockPath = "./package-lock.json";
+const pkgPath = path.resolve(process.cwd(), "package.json");
+const lockPath = path.resolve(process.cwd(), "package-lock.json");
 
 // Update package.json
 const pkg = require(pkgPath);
