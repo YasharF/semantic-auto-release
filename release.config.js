@@ -13,7 +13,6 @@ if (step === "create_release_files") {
 }
 
 module.exports = {
-  branches: ["main"], // overridden in create_release_files via CLI
   tagFormat: "v${version}",
   repositoryUrl: execSync("git config --get remote.origin.url")
     .toString()

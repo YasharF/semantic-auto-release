@@ -10,7 +10,6 @@ jobs:
       contents: write
       pull-requests: write
       packages: write
-      checks: read
     env:
       HUSKY: 0
 
@@ -40,26 +39,23 @@ jobs:
         if: github.event_name == 'workflow_dispatch' || github.event_name == 'schedule'
         env:
           release_step: create_release_files
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           set -euo pipefail
-          BASE_BRANCH="main"
-          BRANCH="temp_auto_release_${GITHUB_RUN_NUMBER}_${GITHUB_RUN_ATTEMPT}"
+          EXPECTED_BRANCH="temp_auto_release_${GITHUB_RUN_NUMBER}_${GITHUB_RUN_ATTEMPT}"
 
           # Cleanup stale temp branches
           for b in $(git ls-remote --heads origin "temp_auto_release_*" | awk '{print $2}' | sed 's#refs/heads/##'); do
-            if [ "$b" != "$BRANCH" ]; then
+            if [ "$b" != "$EXPECTED_BRANCH" ]; then
               git push origin --delete "$b" || true
             fi
           done
 
-          # Create temp branch from main without tracking origin/main
-          git fetch origin "${BASE_BRANCH}"
-          git checkout -b "${BRANCH}" "origin/${BASE_BRANCH}"
-          git push --set-upstream origin "${BRANCH}"
+          # Create temp branch from main
+          git fetch origin main
+          git checkout -b "${EXPECTED_BRANCH}" origin/main
 
           # Run semantic-release in no-write mode with our export plugin
-          npx semantic-release --no-ci --dry-run --branches "${BRANCH}" --extends ./release.config.js
+          npx semantic-release --no-ci --dry-run --extends ./release.config.js
 
           VERSION=$(cat version.txt)
           NOTES_FILE="notes.md"
@@ -69,20 +65,21 @@ jobs:
 
           git add CHANGES.md package.json package-lock.json
           git commit -m "chore(release): ${VERSION}" || true
-          git push origin HEAD
+          git push --set-upstream origin "${EXPECTED_BRANCH}"
 
           gh pr create \
             --base main \
-            --head "$(git branch --show-current)" \
+            --head "${EXPECTED_BRANCH}" \
             --title "chore(release): ${VERSION}" \
             --body "Automated release bump PR for ${VERSION}."
 
-      # Step 2: Merge release files
+      # Step 2: Validate and merge release PR
       - name: Validate release PR
-        if: github.event_name == 'pull_request' && startsWith(github.event.pull_request.head.ref, 'temp_auto_release_')
+        if: >
+          github.event_name == 'pull_request' &&
+          github.event.pull_request.head.ref == format('temp_auto_release_{0}_{1}', github.run_number, github.run_attempt)
         uses: actions/github-script@v7
         with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
             const pr = context.payload.pull_request;
             if (pr.user.login !== 'github-actions[bot]') {
@@ -101,9 +98,10 @@ jobs:
             }
 
       - name: Merge release PR
-        if: github.event_name == 'pull_request' && startsWith(github.event.pull_request.head.ref, 'temp_auto_release_') && success()
-        env:
-          GH_TOKEN: ${{ secrets.GH_TOKEN || secrets.GITHUB_TOKEN }}
+        if: >
+          github.event_name == 'pull_request' &&
+          github.event.pull_request.head.ref == format('temp_auto_release_{0}_{1}', github.run_number, github.run_attempt) &&
+          success()
         run: gh pr merge --squash ${{ github.event.pull_request.number }}
 
       # Step 3: Publish package
@@ -113,10 +111,8 @@ jobs:
           github.event.action == 'closed' &&
           github.event.pull_request.merged == true &&
           github.event.pull_request.user.login == 'github-actions[bot]' &&
-          startsWith(github.event.pull_request.head.ref, 'temp_auto_release_')
+          github.event.pull_request.head.ref == format('temp_auto_release_{0}_{1}', github.run_number, github.run_attempt)
         env:
-          release_step: publish_package
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
         run: |
           set -euo pipefail
@@ -143,8 +139,6 @@ jobs:
           github.event.action == 'closed' &&
           github.event.pull_request.merged == true &&
           github.event.pull_request.user.login == 'github-actions[bot]' &&
-          startsWith(github.event.pull_request.head.ref, 'temp_auto_release_')
-        env:
-          GH_TOKEN: ${{ secrets.GH_TOKEN || secrets.GITHUB_TOKEN }}
+          github.event.pull_request.head.ref == format('temp_auto_release_{0}_{1}', github.run_number, github.run_attempt)
         run: |
           gh api -X DELETE "repos/${{ github.repository }}/git/refs/heads/${{ github.event.pull_request.head.ref }}" || true
