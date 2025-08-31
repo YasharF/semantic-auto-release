@@ -27,7 +27,6 @@ const basePlugins = [
 ];
 
 if (phase === "BUMP") {
-  // Prepare-only: changelog + git commit
   basePlugins.push(
     [
       "@semantic-release/changelog",
@@ -38,18 +37,18 @@ if (phase === "BUMP") {
       {
         assets: ["package.json", "package-lock.json", "CHANGES.md"],
         message:
-          "chore(release): ${nextRelease.version} [skip ci]\n\n${nextRelease.notes}",
+          "chore(release): ${nextRelease.version}\n\n${nextRelease.notes}",
+        push: false,
       },
     ],
   );
 } else if (phase === "PUBLISH") {
-  // Full publish: npm + GitHub release
   basePlugins.push("@semantic-release/npm", "@semantic-release/github");
 }
 
 module.exports = {
-  // Always set to main so bump mode calculates version but commits to current branch
   branches: ["main"],
+  tagFormat: phase === "BUMP" ? false : "v${version}",
   repositoryUrl: execSync("git config --get remote.origin.url")
     .toString()
     .trim(),
