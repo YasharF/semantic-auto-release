@@ -146,6 +146,8 @@ No GitHub personal access tokens (PATs) or admin‑level permissions are require
 
 5. **Merge and publish**
    - The script merges the PR containing the changelog and version bump into `main`, then tags, publishes to npm, and creates a GitHub Release.
+   - Before tagging and publishing, the script checks if there have been any unexpected commits added to `main` since the release calculation.  
+     If such commits are detected, the script will abort. In this case, the changelog committed by the PR will not include the new commit(s), and the user will need to perform a manual release (to npm, GitHub package release, and tag) to ensure the changelog and published package are accurate.
    - Overwrites `.npmrc` npm credentials with `NPM_TOKEN` to ensure authentication to the npm registry.  
      **Note:** If you have unusual `.npmrc` customizations, be aware that the script may overwrite conflicting auth lines.
 
