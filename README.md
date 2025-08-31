@@ -40,7 +40,13 @@ Designed for protected `main` branches with zero manual publishing.
     In your repository: Settings → Secrets and variables → Actions → New repository secret  
     Name: `NPM_TOKEN` (must have publish rights to your package scope)
 
-6.  **Create the trigger workflow**
+6.  **Enable PR creation permissions**
+
+    In your repository: Settings → Actions → General → Workflow permissions →  
+    Check **"Allow GitHub Actions to create and approve pull requests"**.  
+    Without this, the bump job will fail when trying to open a PR.
+
+7.  **Create the trigger workflow**
 
     Add `.github/workflows/ci_auto_release.yml`:
 
@@ -64,7 +70,7 @@ Designed for protected `main` branches with zero manual publishing.
         secrets: inherit
 ```
 
-7.  **Configure repo settings**
+8.  **Configure repo settings**
     - Protect `main` and require PRs before merging
 
 Commit these changes and push to `main`. Your first automated PR will be created on the next manual trigger or scheduled run.
@@ -137,29 +143,18 @@ If you are reviewing or modifying these workflows, **do not**:
 - Re‑enable full publish plugins in bump mode — this will attempt to publish from the bump branch and fail or bypass the PR‑based flow.
 - Change the event triggers without understanding their impact on token permissions and phase detection.
 - Trigger publish on `push` to `main` without guarding for bump PR merges — this caused unintended immediate publishes when merging unrelated PRs.
-- Rely solely on commit message matching to decide publish — this is brittle and was replaced with PR metadata checks.
-- Skip pushing the bump branch before semantic‑release — this caused branch‑existence validation failures.
-- Run semantic‑release in bump mode with full plugin set — this attempted to publish from the bump branch and broke the PR‑based flow.
-
-These points are critical to keeping the PR‑based, protected‑branch release flow working as intended and avoiding regressions that have already been encountered and solved.
-
-**Why this design?**
-
-- Keeps `main` protected — no direct pushes from automation.
-- Ensures every release bump is reviewable and traceable via a PR.
-- Allows manual or scheduled control over when bumps and publishes happen.
-- Uses the same workflow structure consumers get, so changes are tested here first.
-- Splitting behaviour by event type avoids maintaining separate bump/publish workflows and keeps logic in one place.
-- Handles GitHub token permission edge cases gracefully.
-- Documents known pitfalls so they are not re‑introduced.
+- Rely solely on commit message matching to decide publish — brittle and replaced with PR metadata checks.
+- Skip pushing the bump branch before semantic‑release — causes branch‑existence validation failures.
+- **Run bump mode with `branches` set to the bump branch in config** — semantic‑release will see the event context as `main` and skip, leaving no commits for the PR.  
+  Instead, keep `branches: ['main']` in config for bump mode so it calculates the version, but commit to the bump branch.
 
 ---
 
-## Updating
+## Known pitfalls
 
-- The reusable workflow is referenced via a tag in `uses:` for consumers.  
-  In this repo, we call it locally to test changes before tagging.
-- The Husky hook shim stays the same; updates to hook logic are picked up automatically when you update this package.
+- **GitHub Actions context branch**: Even if you `git checkout` a new branch in the job, `GITHUB_REF` remains the branch that triggered the workflow. semantic‑release uses this to decide if it should run.  
+  Solution: In bump mode, leave `branches` in config pointing to your real release branch (e.g. `main`) and just commit the prepared files to the bump branch.
+- **Workflow permissions**: Without "Allow GitHub Actions to create and approve pull requests" enabled, `gh pr create` will fail with a GraphQL permission error.
 
 ## License
 
