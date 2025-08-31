@@ -1,3 +1,12 @@
+## 1.0.1 - 2025-08-31
+
+## [1.0.1](https://github.com/YasharF/semantic-auto-release/compare/v1.0.0...v1.0.1) (2025-08-31)
+
+
+### Bug Fixes
+
+* clean-up logging errors ([61c2e2d](https://github.com/YasharF/semantic-auto-release/commit/61c2e2df0d3a54a93acdc47827aa8b0cbd6b2106))
+
 ## 1.0.0 - 2025-08-31
 
 # 1.0.0 (2025-08-31)
