@@ -1,5 +1,13 @@
 # Changes
 
+## [2.1.1](https://github.com/YasharF/semantic-auto-release/compare/v2.1.0...v2.1.1) (2025-08-31)
+
+
+### Bug Fixes
+
+* use main when calculating versions ([8367e42](https://github.com/YasharF/semantic-auto-release/commit/8367e42f6060a69bf1bfef84a94cd3705b70ae11))
+* use pr close instead of push for publish ([7c097cd](https://github.com/YasharF/semantic-auto-release/commit/7c097cd98095ec46c89638fb13152dd8abeaba81))
+
 ## [2.0.5](https://github.com/YasharF/semantic-auto-release/compare/v2.0.4...v2.0.5) (2025-08-30)
 
 ## [2.0.4](https://github.com/YasharF/semantic-auto-release/compare/v2.0.3...v2.0.4) (2025-08-30)
