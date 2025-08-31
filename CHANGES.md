@@ -1,3 +1,24 @@
+## 2.2.0 - 2025-08-31
+
+# [2.2.0](https://github.com/YasharF/semantic-auto-release/compare/v2.1.1...v2.2.0) (2025-08-31)
+
+
+### Bug Fixes
+
+* add checks permission to workflow ([c10b6bd](https://github.com/YasharF/semantic-auto-release/commit/c10b6bd77e5878004967fff247ca194d000f58b0))
+* add missing GH_TOKEN, fast fail if unrelated PR ([446c428](https://github.com/YasharF/semantic-auto-release/commit/446c428f4cb22a923c802c67b9f45f10f8e7f3ed))
+* adjust push to main workflow ([0047416](https://github.com/YasharF/semantic-auto-release/commit/0047416ae0506644ae9389f10f32492c1d91e347))
+* don't skip PR checks ([1dd71e7](https://github.com/YasharF/semantic-auto-release/commit/1dd71e72cff33fd879330aa3c6895a9db4cb6b8b))
+* push to origin ([e6d3157](https://github.com/YasharF/semantic-auto-release/commit/e6d3157795eb5bf9d681511965a6de4abda981c4))
+* remove tags ([7b227e4](https://github.com/YasharF/semantic-auto-release/commit/7b227e481c750ae382f46795bd5f070c5140a7eb))
+* use proper path for package.json ([eafa942](https://github.com/YasharF/semantic-auto-release/commit/eafa9422770ca57e9beb1a4a92a59f888223bd8c))
+* use temp branch for the local branch ([ee9eaff](https://github.com/YasharF/semantic-auto-release/commit/ee9eaff5ac30c08e5958aea29f3c7c7fc22e9d83))
+
+
+### Features
+
+* update for process using limited semantic-release ([f5228eb](https://github.com/YasharF/semantic-auto-release/commit/f5228ebaafb9585625b36469eeb341fb80438211))
+
 # Changes
 
 ## [2.1.1](https://github.com/YasharF/semantic-auto-release/compare/v2.1.0...v2.1.1) (2025-08-31)
