@@ -1,17 +1,12 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-echo "=== Resetting staging branch ==="
+# Generate a unique ephemeral branch name for this run
+TEMP_BRANCH="temp_release_${GITHUB_RUN_ID}_${GITHUB_RUN_NUMBER}"
+
+echo "=== Creating ephemeral release branch: $TEMP_BRANCH ==="
 git fetch origin main || true
-git fetch origin auto-release-staging || true
-if git show-ref --verify --quiet refs/heads/auto-release-staging; then
-  git checkout auto-release-staging
-elif git show-ref --verify --quiet refs/remotes/origin/auto-release-staging; then
-  git checkout -b auto-release-staging origin/auto-release-staging
-else
-  git checkout -b auto-release-staging origin/main
-fi
-git reset --hard origin/main
+git checkout -b "$TEMP_BRANCH" origin/main
 
 git config user.name "github-actions[bot]"
 git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
@@ -34,18 +29,18 @@ node ./scripts/update-version.js "$VERSION"
 git add CHANGES.md package.json package-lock.json 2> /dev/null || git add CHANGES.md package.json
 git commit -m "chore(release): ${VERSION}" || true
 
-echo "=== Pushing to staging branch ==="
-git push origin auto-release-staging --force
+echo "=== Pushing ephemeral branch ==="
+git push origin "$TEMP_BRANCH" --force
 
 echo "=== Creating PR into main ==="
 gh pr create \
   --base main \
-  --head auto-release-staging \
+  --head "$TEMP_BRANCH" \
   --title "chore(release): ${VERSION}" \
   --body "Automated release PR for version ${VERSION} (changelog + version bump)."
 
 echo "=== Merging PR ==="
-PR_NUMBER=$(gh pr list --head auto-release-staging --base main --state open --json number --jq '.[0].number')
+PR_NUMBER=$(gh pr list --head "$TEMP_BRANCH" --base main --state open --json number --jq '.[0].number')
 if [[ -n "$PR_NUMBER" ]]; then
   gh pr merge "$PR_NUMBER" --squash
 fi
@@ -60,11 +55,11 @@ git push origin "v$VERSION"
 if [ -f .npmrc ]; then
   grep -v '//registry.npmjs.org/:_authToken=' .npmrc > .npmrc.tmp && mv .npmrc.tmp .npmrc
 fi
-# Append our auth to user-level npmrc
+# Append our auth to user-level npmrc without leaking token to logs
 cat << EOF >> ~/.npmrc
 registry=https://registry.npmjs.org/
 always-auth=true
-//registry.npmjs.org/:_authToken=${NODE_AUTH_TOKEN}
+//registry.npmjs.org/:_authToken=${NPM_TOKEN}
 EOF
 
 npm publish --access public
@@ -73,3 +68,6 @@ echo "=== Creating GitHub Release ==="
 gh release create "v${VERSION}" \
   --title "v${VERSION}" \
   --notes-file notes.md
+
+echo "=== Cleanup: deleting ephemeral branch from remote ==="
+git push origin --delete "$TEMP_BRANCH" || echo "Warning: could not delete branch $TEMP_BRANCH (it may have already been removed)"
