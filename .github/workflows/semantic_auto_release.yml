@@ -1,17 +1,14 @@
-name: Semantic Auto Release Engine
+name: Semantic Auto Release
 
 on:
   workflow_call:
+    secrets:
+      NPM_TOKEN:
+        required: true
 
 jobs:
   release:
-    if: >
-      github.event_name == 'workflow_dispatch' ||
-      github.event_name == 'schedule' ||
-      (
-        github.event_name == 'pull_request' &&
-        github.event.pull_request.head.ref == format('temp_auto_release_{0}_{1}', github.run_number, github.run_attempt)
-      )
+    name: Release (changelog + version bump PR, merge, publish)
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -21,141 +18,88 @@ jobs:
       HUSKY: 0
 
     steps:
-      - name: Checkout
-        uses: actions/checkout@v5
-        with:
-          fetch-depth: 0
-          persist-credentials: true
-
-      - name: Configure git user
+      # 1. Reset staging branch
+      - name: Fetch main and staging
         run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git fetch origin main || true
+          git fetch origin auto-release-staging || true
+          if git show-ref --verify --quiet refs/heads/auto-release-staging; then
+            git checkout auto-release-staging
+          else
+            if git show-ref --verify --quiet refs/remotes/origin/auto-release-staging; then
+              git checkout -b auto-release-staging origin/auto-release-staging
+            else
+              git checkout -b auto-release-staging origin/main
+            fi
+          fi
+          git reset --hard origin/main
 
-      - name: Setup Node
-        uses: actions/setup-node@v4
-        with:
-          node-version: lts/*
-          cache: npm
-
-      - name: Install dependencies
-        run: npm ci
-
-      # Step 1: Create release files
-      - name: Create release files
-        if: github.event_name == 'workflow_dispatch' || github.event_name == 'schedule'
+      # 2. Calculate release data
+      - name: Run semantic-release dry-run with export plugin
         env:
           release_step: create_release_files
           GH_TOKEN: ${{ github.token }}
         run: |
-          set -euo pipefail
-          EXPECTED_BRANCH="temp_auto_release_${GITHUB_RUN_NUMBER}_${GITHUB_RUN_ATTEMPT}"
-
-          # Cleanup stale temp branches
-          for b in $(git ls-remote --heads origin "temp_auto_release_*" | awk '{print $2}' | sed 's#refs/heads/##'); do
-            if [ "$b" != "$EXPECTED_BRANCH" ]; then
-              git push origin --delete "$b" || true
-            fi
-          done
-
-          # Create temp branch from main
-          git fetch origin main
-          git checkout -b "${EXPECTED_BRANCH}" origin/main
-
-          # Run semantic-release in no-write mode with our export plugin
           npx semantic-release --no-ci --dry-run --extends ./release.config.js
-
           VERSION=$(cat version.txt)
-          NOTES_FILE="notes.md"
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "notes_file=notes.md" >> $GITHUB_OUTPUT
+        id: sr
 
-          node ./scripts/write-changes-md.js "$VERSION" "$NOTES_FILE"
-          node ./scripts/update-version.js "$VERSION"
+      - name: Stop if no release is due
+        if: ${{ !steps.sr.outputs.version }}
+        run: exit 0
 
-          git add CHANGES.md package.json package-lock.json
-          git commit -m "chore(release): ${VERSION}" || true
+      # 3. Generate and commit release files
+      - name: Write CHANGES.md
+        run: node ./scripts/write-changes-md.js "${{ steps.sr.outputs.version }}" "${{ steps.sr.outputs.notes_file }}"
 
-          # Push branch only after committing changes
-          git push --set-upstream origin "${EXPECTED_BRANCH}"
+      - name: Update package.json version
+        run: node ./scripts/update-version.js "${{ steps.sr.outputs.version }}"
 
+      - name: Commit release files
+        run: |
+          git add CHANGES.md package.json package-lock.json 2>/dev/null || git add CHANGES.md package.json
+          git commit -m "chore(release): ${{ steps.sr.outputs.version }}" || true
+
+      - name: Push changes to auto-release-staging
+        run: git push origin auto-release-staging --force
+
+      - name: Create PR into main
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
           gh pr create \
             --base main \
-            --head "${EXPECTED_BRANCH}" \
-            --title "chore(release): ${VERSION}" \
-            --body "Automated release bump PR for ${VERSION}."
+            --head auto-release-staging \
+            --title "chore(release): ${{ steps.sr.outputs.version }}" \
+            --body "Automated release PR for version ${{ steps.sr.outputs.version }} (changelog + version bump)."
 
-      # Step 2: Validate and merge release PR
-      - name: Validate release PR
-        if: >
-          github.event_name == 'pull_request' &&
-          github.event.pull_request.head.ref == format('temp_auto_release_{0}_{1}', github.run_number, github.run_attempt)
-        uses: actions/github-script@v7
-        with:
-          script: |
-            const pr = context.payload.pull_request;
-
-            if (pr.user.login !== 'github-actions[bot]') {
-              core.setFailed(`PR author must be github-actions[bot], got ${pr.user.login}`);
-            }
-
-            const files = await github.rest.pulls.listFiles({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              pull_number: pr.number
-            });
-            const allowed = ['CHANGES.md', 'package.json', 'package-lock.json'];
-            for (const f of files.data) {
-              if (!allowed.includes(f.filename)) {
-                core.setFailed(`Unexpected file changed: ${f.filename}`);
-              }
-            }
-
-      - name: Merge release PR
-        if: >
-          github.event_name == 'pull_request' &&
-          github.event.pull_request.head.ref == format('temp_auto_release_{0}_{1}', github.run_number, github.run_attempt) &&
-          success()
+      # 4. Merge and publish
+      - name: Merge PR
         env:
-          GH_TOKEN: ${{ github.token }}
-        run: gh pr merge --squash ${{ github.event.pull_request.number }}
-
-      # Step 3: Publish package
-      - name: Publish package
-        if: >
-          github.event_name == 'pull_request' &&
-          github.event.action == 'closed' &&
-          github.event.pull_request.merged == true &&
-          github.event.pull_request.user.login == 'github-actions[bot]' &&
-          github.event.pull_request.head.ref == format('temp_auto_release_{0}_{1}', github.run_number, github.run_attempt)
-        env:
-          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
           GH_TOKEN: ${{ github.token }}
         run: |
-          set -euo pipefail
-          VERSION=$(node -p "require('./package.json').version")
+          PR_NUMBER=$(gh pr list --head auto-release-staging --base main --state open --json number --jq '.[0].number')
+          if [ -n "$PR_NUMBER" ]; then
+            gh pr merge "$PR_NUMBER" --squash
+          fi
 
-          # Tag in GitHub
+      - name: Tag and publish
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: |
           git fetch origin main
           git checkout main
-          git pull
-          git tag "v${VERSION}"
-          git push origin "v${VERSION}"
-
-          # Publish to npm
+          VERSION=${{ steps.sr.outputs.version }}
+          git tag "v$VERSION"
+          git push origin "v$VERSION"
           npm publish --access public
 
-          # Create GitHub Release
-          gh release create "v${VERSION}" \
-            --title "v${VERSION}" \
-            --notes-file notes.md
-
-      - name: Delete merged temp branch
-        if: >
-          github.event_name == 'pull_request' &&
-          github.event.action == 'closed' &&
-          github.event.pull_request.merged == true &&
-          github.event.pull_request.user.login == 'github-actions[bot]' &&
-          github.event.pull_request.head.ref == format('temp_auto_release_{0}_{1}', github.run_number, github.run_attempt)
+      - name: Create GitHub Release
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          gh api -X DELETE "repos/${{ github.repository }}/git/refs/heads/${{ github.event.pull_request.head.ref }}" || true
+          gh release create "v${{ steps.sr.outputs.version }}" \
+            --title "v${{ steps.sr.outputs.version }}" \
+            --notes-file notes.md
