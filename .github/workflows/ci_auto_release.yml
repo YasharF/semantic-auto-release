@@ -5,16 +5,22 @@ on:
   schedule:
     - cron: "0 0 1 * *"
 
+env:
+  HUSKY: 0
+
 jobs:
   release:
+    # create a dependency if you need checks
+    # that can't be a part of this job but need
+    # to complete successfully prior to release.
+    needs: [integration-test]
+
     name: Prep + Release
     runs-on: ubuntu-latest
     permissions:
       contents: write
       pull-requests: write
       packages: write
-    env:
-      HUSKY: 0
     steps:
       - name: Checkout
         uses: actions/checkout@v5
@@ -31,8 +37,16 @@ jobs:
         run: npm ci
 
       # add other steps such as
-      # check lint, test, type build, etc
-      # as applicable
+      # check lint, test, typescript build, etc.
+      # as applicable.
+      - name: Prettier
+        run: |
+          npm run prettier:check
+      - name: Unit tests
+        run: |
+          npm run test:unit
+
+      # end user steps
 
       - name: Run release script
         env:
@@ -42,3 +56,27 @@ jobs:
           CHANGELOG_FILE: CHANGES.md
           RUN_PRETTIER_ON_CHANGELOG: true
         run: ./scripts/run-release.sh
+
+  integration-test:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write # semantic-release needs to write permission even in dry run
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: lts/*
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+      - name: Integration tests
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: |
+          npm run test:integration
