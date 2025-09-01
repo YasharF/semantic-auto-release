@@ -1,4 +1,4 @@
-name: CI Auto Release
+name: Semantic Auto Release
 
 on:
   workflow_dispatch:
