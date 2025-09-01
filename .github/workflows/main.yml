@@ -35,7 +35,7 @@ jobs:
         run: |
           npm run test:unit
 
-  integration-test:
+  integration-tests:
     runs-on: ubuntu-latest
     permissions:
       contents: write # semantic-release needs to write permission even in dry run
@@ -60,7 +60,7 @@ jobs:
           npm run test:integration
 
   dependabot-automerge:
-    needs: [static-and-unit-tests, integration-test]
+    needs: [static-and-unit-tests, integration-tests]
     if: >
       github.event_name == 'pull_request' &&
       github.event.pull_request.user.login == 'dependabot[bot]'
