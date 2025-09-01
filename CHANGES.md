@@ -1,3 +1,12 @@
+## 1.1.1 - 2025-09-01
+
+## [1.1.1](https://github.com/YasharF/semantic-auto-release/compare/v1.1.0...v1.1.1) (2025-09-01)
+
+
+### Bug Fixes
+
+* fix typo ([c743b54](https://github.com/YasharF/semantic-auto-release/commit/c743b5454bc6c3c5f1f327966afa0e9409f7fbc7))
+
 ## 1.1.0 - 2025-08-31
 
 # [1.1.0](https://github.com/YasharF/semantic-auto-release/compare/v1.0.1...v1.1.0) (2025-08-31)
