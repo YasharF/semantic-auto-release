@@ -11,6 +11,9 @@
     "npm-publish",
     "semantic-release"
   ],
+  "bin": {
+    "auto-release-setup": "scripts/setup.js"
+  },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/yasharf/semantic-auto-release.git"
@@ -19,10 +22,13 @@
   "author": "Yashar Fakhari",
   "exports": {
     "./commitlint": "./commitlint.config.js",
-    "./release": "./release.config.js"
+    "./release": "./release.config.js",
+    "./conventional-commits": "./.husky/commit-msg",
+    "./run-release": "./scripts/run-release.sh"
   },
   "main": "index.js",
   "files": [
+    "scripts/setup.js",
     ".github/workflow/lint_pr.yml",
     ".github/workflows/ci_auto_release.yml",
     ".github/workflows/semantic_auto_release.yml",
