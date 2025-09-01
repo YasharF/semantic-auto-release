@@ -12,116 +12,156 @@ No GitHub personal access tokens (PATs) or admin‑level permissions are require
 
 ## Quick start
 
-1.  Install the package
+1. Install the package:
 
-    ```bash
-    npm install --save-dev @yasharf/semantic-auto-release
-    ```
+   ```bash
+   npm install --save-dev @yasharf/semantic-auto-release
+   ```
 
-2.  Install and initialize Husky
+2. Run the automated setup script:
 
-    ```bash
-    npm install --save-dev husky
-    npx husky init
-    ```
+   ```bash
+   npx auto-release-setup --create-workflow
+   ```
 
-3.  Enable Conventional Commits enforcement
+3. Add `NPM_TOKEN` to your repository secrets (must have publish rights).
 
-    Add this to your package.json:
+4. Enable PR creation permissions in GitHub Actions settings.
 
-    ```json
-    "commitlint": {
-      "extends": ["@yasharf/semantic-auto-release/commitlint"]
-    }
-    ```
+5. (Recommended) Add branch protection for your default branch in GitHub and require pull requests.
 
-4.  Set up the Husky commit-msg hook (shim)
+6. Commit and push the changes made by the setup script, including the changes in `.husky/` and `.github/`.
 
-    Create `.husky/commit-msg` with the following content:
+That's it. The setup is done.
 
-    ```bash
-    #!/bin/sh
-    "$(pwd)/node_modules/@yasharf/semantic-auto-release/.husky/commit-msg" "$@"
-    ```
+After this point, all git commits need to conform to Conventional Commits. If you have not been using conventional commits, you need to do one more manual package release. Make sure that you version tag (i.e. v1.2.3) gets added to your GitHub repo. The auto-release will need all commits since the last tag to be using Convential Commits to figure out if a publish a new version of your package, and the version number for it. We also highly adding a pull request title checker such as [amannn/action-semantic-pull-request]
 
-    Then make it executable:
+---
 
-    ```bash
-    chmod +x .husky/commit-msg
-    ```
+## Using the setup script
 
-    This delegates to the hook logic inside the package. Updates are picked up automatically when you update the package.
+The setup script will:
 
-5.  Add NPM_TOKEN
+- Ensure Husky is installed and initialized
+- Create or verify the `.husky/commit-msg` hook
+- Add or verify the `commitlint` config in `package.json`
+- Optionally create a GitHub Actions workflow with a random monthly schedule to avoid traffic spikes
+- Tell you exactly when your scheduled run will occur
 
-    In your repository: Settings → Secrets and variables → Actions → New repository secret  
-    Name: `NPM_TOKEN` (must have publish rights to your package scope)
+Flags:
 
-6.  Enable PR creation permissions
+- `-y` → skip confirmation prompt
+- `--create-workflow` → create a workflow file
+- `--workflow-name=<name>` → optional, overrides default `semantic-auto-release.yml`
 
-    In your repository: Settings → Actions → General → Workflow permissions →  
-    Check “Allow GitHub Actions to create and approve pull requests”.
+If a workflow is created, the script will print the exact UTC day/time it will run each month.
 
-7.  (Recommended) Protect your default branch
+---
 
-    If you don't already have branch protection on your default branch and would like to enable it:
-    - Settings → Branches → Add branch protection rule
-      - Branch name pattern: your default branch name (e.g., `main` or `master`)
-      - Require a pull request before merging
-      - Optionally require status checks to pass (choose the checks your repo relies on)
-      - Optionally enforce linear history and restrict who can push (if applicable)
+## Manual setup
 
-    We highly recommend protecting the default branch to ensure only validated changes are merged.
+If you prefer not to use the setup script or it fails for some reason, you can configure everything manually:
 
-8.  Create the trigger workflow (consumer‑owned prep + release script step)
+1. **Install and initialize Husky**:
 
-    Add `.github/workflows/ci_auto_release.yml` and add your custom steps such as lint check, tests, builds, etc.:
+   ```bash
+   npm install --save-dev husky
+   npx husky init
+   ```
 
-    ```yaml
-    name: CI Auto Release
+2. **Enable Conventional Commits enforcement**:
 
-    on:
-      workflow_dispatch:
-      schedule:
-        - cron: "0 0 1 * *"
+   Add this to your `package.json`:
 
-    jobs:
-      release:
-        runs-on: ubuntu-latest
-        permissions:
-          contents: write
-          pull-requests: write
-          packages: write
-        env:
-          HUSKY: 0
-        steps:
-          - name: Checkout
-            uses: actions/checkout@v5
-            with:
-              fetch-depth: 0
+   ```json
+   "commitlint": {
+     "extends": ["@yasharf/semantic-auto-release/commitlint"]
+   }
+   ```
 
-          - name: Setup Node
-            uses: actions/setup-node@v4
-            with:
-              node-version: lts/*
-              cache: npm
+3. **Set up the Husky commit-msg hook**:
 
-          - name: Install dependencies
-            run: npm ci
+   Create `.husky/commit-msg` with the following content:
 
-          # add other steps such as lint, test, type build, etc.
+   ```bash
+   #!/bin/sh
+   npx @yasharf/semantic-auto-release/conventional-commits "$@"
+   ```
 
-          - name: Run release script
-            env:
-              GITHUB_TOKEN: ${{ github.token }}
-              GH_TOKEN: ${{ github.token }}
-              NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
-              CHANGELOG_FILE: CHANGELOG.md
-              RUN_PRETTIER_ON_CHANGELOG: true
-            run: ./node_modules/@yasharf/semantic-auto-release/scripts/run-release.sh
-    ```
+   Then make it executable:
 
-    Commit these changes and push to your default branch. Your first automated PR will be created on the next manual trigger or scheduled run.
+   ```bash
+   chmod +x .husky/commit-msg
+   ```
+
+4. **Add `NPM_TOKEN`**:
+
+   In your repository: Settings → Secrets and variables → Actions → New repository secret  
+   Name: `NPM_TOKEN` (must have publish rights to your package scope)
+
+5. **Enable PR creation permissions**:
+
+   In your repository: Settings → Actions → General → Workflow permissions →  
+   Check “Allow GitHub Actions to create and approve pull requests”.
+
+6. **(Recommended) Protect your default branch**:
+
+   If you don't already have branch protection on your default branch and would like to enable it:
+   - Settings → Branches → Add branch protection rule
+     - Branch name pattern: your default branch name (e.g., `main` or `master`)
+     - Require a pull request before merging
+     - Optionally require status checks to pass
+     - Optionally enforce linear history and restrict who can push
+
+7. **Create the trigger workflow**:
+
+   Add `.github/workflows/semantic-auto-release.yml` (or your preferred name) and add your custom steps such as lint check, tests, builds, etc.:
+
+   ```yaml
+   name: Semantic Auto Release
+
+   on:
+     workflow_dispatch:
+     schedule:
+       - cron: "0 0 1 * *" # adjust as desired
+
+   jobs:
+     release:
+       runs-on: ubuntu-latest
+       permissions:
+         contents: write
+         pull-requests: write
+         packages: write
+       env:
+         HUSKY: 0
+       steps:
+         - name: Checkout
+           uses: actions/checkout@v5
+           with:
+             fetch-depth: 0
+
+         - name: Setup Node
+           uses: actions/setup-node@v4
+           with:
+             node-version: lts/*
+             cache: npm
+
+         - name: Install dependencies
+           run: npm ci
+
+         # add other steps such as lint, test, type build, etc.
+
+         - name: Run release script
+           env:
+             GITHUB_TOKEN: ${{ github.token }}
+             GH_TOKEN: ${{ github.token }}
+             NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+             CHANGELOG_FILE: CHANGELOG.md
+             RUN_PRETTIER_ON_CHANGELOG: true
+           run: npx @yasharf/semantic-auto-release/run-release
+   ```
+
+---
 
 ## How it works
 

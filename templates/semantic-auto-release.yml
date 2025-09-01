@@ -1,0 +1,57 @@
+name: Semantic Auto Release
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "__CRON_EXPR__"
+
+env:
+  HUSKY: 0
+
+jobs:
+  release:
+    # You can create a job dependency if you need checks
+    # that can't be a part of this job but need to be
+    # completed successfully prior to the release.
+    # needs: [integration-tests]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+      packages: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: lts/*
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      # add other steps such as
+      # check lint, test, typescript build, etc.
+      # as applicable.
+
+      #- name: lint
+      #  run: |
+      #    npm run lint
+      #- name: Unit tests
+      #  run: |
+      #    npm run test:unit
+
+      # end user steps
+
+      - name: Run release script
+        env:
+          GITHUB_TOKEN: \${{ github.token }}
+          GH_TOKEN: \${{ github.token }}
+          NPM_TOKEN: \${{ secrets.NPM_TOKEN }}
+          CHANGELOG_FILE: CHANGELOG.md
+          RUN_PRETTIER_ON_CHANGELOG: true
+        run: npx @yasharf/semantic-auto-release/run-release
