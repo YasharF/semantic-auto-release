@@ -2,12 +2,21 @@
   "name": "@yasharf/semantic-auto-release",
   "version": "1.1.0",
   "description": "Automated release workflow for JavaScript/TypeScript projects using semantic-release, Conventional Commits, and changelog updates.",
-  "license": "BSD-3-Clause",
-  "author": "Yashar Fakhari",
+  "keywords": [
+    "automation",
+    "changelog",
+    "commitlint",
+    "conventional-commits",
+    "github-actions",
+    "npm-publish",
+    "semantic-release"
+  ],
   "repository": {
     "type": "git",
     "url": "git+https://github.com/yasharf/semantic-auto-release.git"
   },
+  "license": "BSD-3-Clause",
+  "author": "Yashar Fakhari",
   "exports": {
     "./commitlint": "./commitlint.config.js",
     "./release": "./release.config.js"
@@ -29,7 +38,13 @@
     "prepare": "husky",
     "prettier:check": "prettier --check **/*.{js,md,yml,sh} .github/*",
     "prettier:write": "prettier --write **/*.{js,md,yml,sh} .github/*",
-    "test": "echo \"No tests yet\""
+    "test": "npm run test:unit && npm run test:integration",
+    "test:integration": "mocha --require sinon --recursive \"test/*.integration.test.js\"",
+    "test:unit": "mocha --require sinon --recursive \"test/*.test.js\" --exclude \"test/*.integration.test.js\""
+  },
+  "lint-staged": {
+    "**/*.{js,yml,md}": "prettier --check",
+    ".github/*": "prettier --check"
   },
   "dependencies": {
     "@commitlint/cli": "^19.8.1",
@@ -39,25 +54,15 @@
     "semantic-release": "^24.2.7"
   },
   "devDependencies": {
+    "chai": "^6.0.1",
     "husky": "^9.1.7",
     "lint-staged": "^16.1.5",
+    "mocha": "^11.7.1",
     "prettier": "^3.6.2",
-    "prettier-plugin-sh": "^0.18.0"
+    "prettier-plugin-sh": "^0.18.0",
+    "sinon": "^21.0.0"
   },
-  "keywords": [
-    "automation",
-    "changelog",
-    "commitlint",
-    "conventional-commits",
-    "github-actions",
-    "npm-publish",
-    "semantic-release"
-  ],
   "publishConfig": {
     "access": "public"
-  },
-  "lint-staged": {
-    "**/*.{js,yml,md}": "prettier --check",
-    ".github/*": "prettier --check"
   }
 }
