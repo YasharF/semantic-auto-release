@@ -1,3 +1,13 @@
+## 1.2.0 - 2025-09-01
+
+# [1.2.0](https://github.com/YasharF/semantic-auto-release/compare/v1.1.1...v1.2.0) (2025-09-01)
+
+
+### Features
+
+* add commitlint to workflows ([9a30c33](https://github.com/YasharF/semantic-auto-release/commit/9a30c33e411558945c94cb325a5a99c3b6b4e271))
+* add setup script ([6bcacbc](https://github.com/YasharF/semantic-auto-release/commit/6bcacbc8483550d99fa08cbeb49c89d539aebbfe))
+
 ## 1.1.1 - 2025-09-01
 
 ## [1.1.1](https://github.com/YasharF/semantic-auto-release/compare/v1.1.0...v1.1.1) (2025-09-01)
