@@ -11,19 +11,33 @@ describe("integration: plugins/export-data.js with semantic-release", function (
   let versionFile;
   let notesFile;
   let branchFile;
+  let originalBranch;
 
   before(function () {
     tempDir = fs.mkdtempSync(path.join(os.tmpdir(), "export-data-test-"));
 
+    // Remember the branch we started on so we can restore it later
+    originalBranch = execSync("git rev-parse --abbrev-ref HEAD", {
+      encoding: "utf8",
+    }).trim();
+
     // Ensure we have an up-to-date local main tracking origin/main
     execSync("git fetch origin main --tags --prune", { stdio: "inherit" });
+
+    // If we're currently on main in the primary worktree, detach it so we can reuse main
+    if (originalBranch === "main") {
+      execSync("git checkout --detach", { stdio: "inherit" });
+    }
+
+    // Create or reset local main to match origin/main
     try {
       execSync("git show-ref --verify --quiet refs/heads/main");
       execSync("git branch -f main origin/main", { stdio: "inherit" });
     } catch {
-      execSync("git checkout -b main origin/main", { stdio: "inherit" });
+      execSync("git branch main origin/main", { stdio: "inherit" });
     }
 
+    // Add the worktree from main
     execSync(`git worktree add --force "${tempDir}" main`, {
       stdio: "inherit",
     });
@@ -42,6 +56,11 @@ describe("integration: plugins/export-data.js with semantic-release", function (
       console.warn(`Warning: failed to remove worktree ${tempDir}`, err);
     }
     fs.rmSync(tempDir, { recursive: true, force: true });
+
+    // Restore the original branch if we detached
+    if (originalBranch && originalBranch !== "HEAD") {
+      execSync(`git checkout ${originalBranch}`, { stdio: "inherit" });
+    }
   });
 
   it("should export release data files when run via semantic-release", function () {
