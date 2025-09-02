@@ -50,7 +50,7 @@ jobs:
       - name: Run release script
         env:
           GITHUB_TOKEN: \${{ github.token }}
-          GH_TOKEN: \${{ github.token }}
+          RELEASE_PAT: ${{ secrets.RELEASE_PAT }} # optional when branch protection does not require checks
           NPM_TOKEN: \${{ secrets.NPM_TOKEN }}
           CHANGELOG_FILE: CHANGELOG.md
           RUN_PRETTIER_ON_CHANGELOG: true

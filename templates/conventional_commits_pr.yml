@@ -1,0 +1,35 @@
+name: "Conventional Commits (PR)"
+
+on:
+  pull_request:
+    types:
+      - opened
+      - edited
+      - reopened
+      - synchronize
+
+permissions:
+  pull-requests: read
+  contents: read
+
+jobs:
+  pr_title_check:
+    name: PR Title Check
+    runs-on: ubuntu-latest
+    if: startsWith(github.event_name, 'pull_request')
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: lts/*
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: PR Title check
+        run: |
+          echo "${{ github.event.pull_request.title }}" | npx commitlint --verbose
