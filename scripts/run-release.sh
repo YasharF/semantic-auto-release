@@ -12,116 +12,256 @@ REPO="${GITHUB_REPOSITORY}"
 #          1 if required checks exist but are pending/failed
 #          2 if required checks exist but none have started (PAT needed)
 #          3 if no required checks configured
+# --- Function: check_required_checks_status ---
+# Arguments: $1 = repo (owner/name), $2 = PR number
+# Returns: 0 if all required checks passed
+#          1 if required checks exist but are pending/failed (incl. required skipped)
+#          2 if required checks exist but none have started OR cannot be determined
+#          3 if no required checks configured
 check_required_checks_status() {
   local repo="$1"
   local pr_number="$2"
 
   echo "DEBUG: Checking required checks status for $repo PR #$pr_number"
 
-  # Get head SHA and base branch
+  # Get PR head SHA and base branch
   local head_sha base_branch
-  head_sha=$(gh pr view "$pr_number" --repo "$repo" --json headRefOid --jq '.headRefOid') || return 3
-  base_branch=$(gh pr view "$pr_number" --repo "$repo" --json baseRefName --jq '.baseRefName') || return 3
+  head_sha=$(gh pr view "$pr_number" --repo "$repo" --json headRefOid --jq '.headRefOid') || {
+    echo "DEBUG: Failed to read head SHA"
+    return 3
+  }
+  base_branch=$(gh pr view "$pr_number" --repo "$repo" --json baseRefName --jq '.baseRefName') || {
+    echo "DEBUG: Failed to read base branch"
+    return 3
+  }
   echo "DEBUG: head_sha=$head_sha base_branch=$base_branch"
 
-  # Try to get required checks from branch protection
-  local required_checks_json required_checks
-  if required_checks_json=$(gh api "repos/$repo/branches/$base_branch/protection" --jq '.required_status_checks.contexts' 2> /dev/null); then
-    echo "DEBUG: Required checks from branch protection API: $required_checks_json"
-    mapfile -t required_checks < <(echo "$required_checks_json" | jq -r '.[]')
-  else
-    echo "DEBUG: Could not read branch protection (insufficient token scope or no protection)."
-    required_checks=()
-  fi
+  # ------------------------------------------------------------
+  # 1) Discover required checks (branch protection → statuses)
+  # ------------------------------------------------------------
 
-  # If branch protection gave nothing, fall back to /status contexts
-  if [[ ${#required_checks[@]} -eq 0 ]]; then
-    local statuses_json
-    statuses_json=$(gh api "repos/$repo/commits/$head_sha/status") || return 3
-    echo "DEBUG: Status contexts from /status API: $(echo "$statuses_json" | jq -r '.statuses[].context')"
-    mapfile -t required_checks < <(echo "$statuses_json" | jq -r '.statuses[].context')
-  fi
+  # Branch protection API (raw + parsed)
+  local bp_stdout_file bp_stderr_file bp_rc
+  bp_stdout_file=$(mktemp) bp_stderr_file=$(mktemp)
+  gh api "repos/$repo/branches/$base_branch/protection" 1> "$bp_stdout_file" 2> "$bp_stderr_file"
+  bp_rc=$?
+  echo "DEBUG: branch_protection_api_rc=$bp_rc"
+  echo "DEBUG: branch_protection_raw_stdout:"
+  cat "$bp_stdout_file"
+  echo "DEBUG: branch_protection_raw_stderr:"
+  cat "$bp_stderr_file"
 
-  local total_required=${#required_checks[@]}
-  echo "DEBUG: total_required=$total_required required_checks_list=${required_checks[*]}"
-  if [[ $total_required -eq 0 ]]; then
-    echo "DEBUG: No required checks detected."
+  local bp_contexts_json=""
+  local -a bp_contexts=()
+  if [[ $bp_rc -eq 0 ]]; then
+    bp_contexts_json=$(jq -c '.required_status_checks.contexts // []' < "$bp_stdout_file" 2> /dev/null || echo "[]")
+    mapfile -t bp_contexts < <(echo "$bp_contexts_json" | jq -r '.[]')
+  fi
+  echo "DEBUG: branch_protection_parsed_contexts=$bp_contexts_json"
+
+  # Commit statuses API (raw + parsed) — always fetch for evaluation/fallback
+  local st_stdout_file st_stderr_file st_rc
+  st_stdout_file=$(mktemp) st_stderr_file=$(mktemp)
+  gh api "repos/$repo/commits/$head_sha/status" 1> "$st_stdout_file" 2> "$st_stderr_file"
+  st_rc=$?
+  echo "DEBUG: statuses_api_rc=$st_rc"
+  echo "DEBUG: statuses_raw_stdout:"
+  cat "$st_stdout_file"
+  echo "DEBUG: statuses_raw_stderr:"
+  cat "$st_stderr_file"
+
+  local st_contexts_json=""
+  local -a st_contexts=()
+  if [[ $st_rc -eq 0 ]]; then
+    # Unique list of contexts present on this commit
+    st_contexts_json=$(jq -c '[.statuses[].context] | unique' < "$st_stdout_file" 2> /dev/null || echo "[]")
+    mapfile -t st_contexts < <(echo "$st_contexts_json" | jq -r '.[]')
+  fi
+  echo "DEBUG: statuses_parsed_contexts=$st_contexts_json"
+
+  # Decide required set source
+  local source="none"
+  local -a required_checks=()
+  if [[ $bp_rc -eq 0 ]]; then
+    source="branch_protection"
+    required_checks=("${bp_contexts[@]}")
+  elif [[ ${#st_contexts[@]} -gt 0 ]]; then
+    source="commit_statuses_fallback"
+    required_checks=("${st_contexts[@]}")
+  fi
+  echo "DEBUG: required_source=$source required_checks_list=${required_checks[*]} total_required=${#required_checks[@]}"
+
+  # If branch protection is readable and reports zero contexts → definitively no required checks
+  if [[ "$source" == "branch_protection" && ${#required_checks[@]} -eq 0 ]]; then
+    echo "DEBUG: Decision: return 3 (branch protection reports no required status checks)."
+    rm -f "$bp_stdout_file" "$bp_stderr_file" "$st_stdout_file" "$st_stderr_file"
     return 3
   fi
 
-  # Wait up to 2 minutes (debug cap) for all required checks to appear
-  local checks_json attempt=1 max_attempts=40 # 40 × 3s = 120s
+  # If we cannot determine any required checks from either API → do not proceed
+  if [[ ${#required_checks[@]} -eq 0 ]]; then
+    echo "DEBUG: Decision: return 2 (cannot determine required checks from branch protection or commit statuses)."
+    rm -f "$bp_stdout_file" "$bp_stderr_file" "$st_stdout_file" "$st_stderr_file"
+    return 2
+  fi
+
+  # ------------------------------------------------------------
+  # 2) Wait (max ~2 minutes) for checks to register on the commit
+  #    A context counts as "found" if:
+  #      - a check-run with matching .name or .external_id exists, OR
+  #      - a status with matching .context exists
+  # ------------------------------------------------------------
+  local checks_json="" attempt=1 max_attempts=12
+  local cr_stdout_file cr_stderr_file
+  cr_stdout_file=$(mktemp) cr_stderr_file=$(mktemp)
+
   while ((attempt <= max_attempts)); do
-    checks_json=$(gh api "repos/$repo/commits/$head_sha/check-runs") || return 3
+    # Refresh both check-runs and statuses so we can consider either signal
+    : > "$cr_stdout_file"
+    : > "$cr_stderr_file"
+    gh api "repos/$repo/commits/$head_sha/check-runs" 1> "$cr_stdout_file" 2> "$cr_stderr_file"
+    local cr_rc=$?
     local found_all=true
-    for check_name in "${required_checks[@]}"; do
-      local count
-      count=$(echo "$checks_json" | jq --arg name "$check_name" '[.check_runs[] | select(.name==$name or .external_id==$name)] | length')
-      if [[ $count -eq 0 ]]; then
+
+    # Debug per-attempt summary (do not dump raw every time)
+    local total_runs="n/a"
+    if [[ $cr_rc -eq 0 ]]; then
+      total_runs=$(jq -r '.total_count' < "$cr_stdout_file" 2> /dev/null || echo "parse_error")
+    fi
+
+    # Reuse last statuses payload; it’s already fetched. That’s sufficient to decide "found" set.
+    for ctx in "${required_checks[@]}"; do
+      local found_for_ctx=0
+      if [[ $cr_rc -eq 0 ]]; then
+        local count_runs
+        count_runs=$(jq --arg name "$ctx" '[.check_runs[] | select(.name==$name or .external_id==$name)] | length' < "$cr_stdout_file" 2> /dev/null || echo "0")
+        if [[ "$count_runs" =~ ^[0-9]+$ ]] && ((count_runs > 0)); then
+          found_for_ctx=1
+        fi
+      fi
+      if ((found_for_ctx == 0 && st_rc == 0)); then
+        local count_statuses
+        count_statuses=$(jq --arg name "$ctx" '[.statuses[] | select(.context==$name)] | length' < "$st_stdout_file" 2> /dev/null || echo "0")
+        if [[ "$count_statuses" =~ ^[0-9]+$ ]] && ((count_statuses > 0)); then
+          found_for_ctx=1
+        fi
+      fi
+      if ((found_for_ctx == 0)); then
         found_all=false
         break
       fi
     done
+
     if $found_all; then
       break
     fi
-    echo "DEBUG: Attempt $attempt — not all required checks found yet, retrying..."
-    sleep 3
+
+    echo "DEBUG: Attempt $attempt — total_check_runs=$total_runs — not all required contexts present yet; retrying..."
+    sleep 10
     ((attempt++))
   done
 
+  # If we timed out waiting for contexts to appear, stop here
   if ((attempt > max_attempts)); then
-    echo "DEBUG: Timed out after $((max_attempts * 3)) seconds waiting for required checks to appear."
+    echo "DEBUG: Timed out after $((max_attempts * 3))s waiting for required contexts to appear."
+    echo "DEBUG: Last check-runs raw stdout:"
+    cat "$cr_stdout_file"
+    echo "DEBUG: Last check-runs raw stderr:"
+    cat "$cr_stderr_file"
+    echo "DEBUG: statuses (for reference):"
+    cat "$st_stdout_file"
+    rm -f "$bp_stdout_file" "$bp_stderr_file" "$st_stdout_file" "$st_stderr_file" "$cr_stdout_file" "$cr_stderr_file"
     return 2
   fi
 
-  echo "DEBUG: Final check runs JSON after $attempt attempt(s):"
-  echo "$checks_json" | jq .
+  echo "DEBUG: Final check-runs raw stdout after $attempt attempt(s):"
+  cat "$cr_stdout_file"
+  echo "DEBUG: Final check-runs raw stderr:"
+  cat "$cr_stderr_file"
 
+  # ------------------------------------------------------------
+  # 3) Evaluate each required context
+  #    Rule: required 'skipped' = failure (abort)
+  # ------------------------------------------------------------
   local passed_count=0 pending_count=0 failed_count=0
 
-  for check_name in "${required_checks[@]}"; do
-    local check_json
-    check_json=$(echo "$checks_json" | jq --arg name "$check_name" '.check_runs | map(select(.name==$name or .external_id==$name))')
-    local total_count
-    total_count=$(echo "$check_json" | jq 'length')
-    if [[ $total_count -eq 0 ]]; then
-      echo "DEBUG: Required check '$check_name' not found at all."
-      return 2
-    fi
+  for ctx in "${required_checks[@]}"; do
+    # Prefer check-runs if present
+    local runs_json
+    runs_json=$(jq --arg name "$ctx" '.check_runs | map(select(.name==$name or .external_id==$name))' < "$cr_stdout_file" 2> /dev/null || echo "[]")
+    local runs_len
+    runs_len=$(echo "$runs_json" | jq 'length' 2> /dev/null || echo "0")
 
-    local ok_count
-    ok_count=$(echo "$check_json" | jq '[.[] | select(.status=="completed" and (.conclusion=="success" or .conclusion=="neutral"))] | length')
-    local skipped_count
-    skipped_count=$(echo "$check_json" | jq '[.[] | select(.status=="completed" and .conclusion=="skipped")] | length')
+    if [[ "$runs_len" =~ ^[0-9]+$ ]] && ((runs_len > 0)); then
+      echo "DEBUG: evaluating_ctx=$ctx via check-runs payload: $runs_json"
 
-    if [[ $skipped_count -gt 0 ]]; then
-      echo "DEBUG: Required check '$check_name' was skipped — treating as failure."
-      ((failed_count++))
-    elif [[ $ok_count -eq $total_count ]]; then
-      ((passed_count++))
-    else
-      local failed_here
-      failed_here=$(echo "$check_json" | jq '[.[] | select(.status=="completed" and (.conclusion=="failure" or .conclusion=="timed_out" or .conclusion=="cancelled" or .conclusion=="action_required"))] | length')
-      if [[ $failed_here -gt 0 ]]; then
+      local skipped_here
+      skipped_here=$(echo "$runs_json" | jq '[.[] | select(.status=="completed" and .conclusion=="skipped")] | length' 2> /dev/null || echo "0")
+      if ((skipped_here > 0)); then
+        echo "DEBUG: ctx=$ctx decision=failed reason=required_check_skipped"
+        ((failed_count++))
+        continue
+      fi
+
+      local ok_here
+      ok_here=$(echo "$runs_json" | jq '[.[] | select(.status=="completed" and (.conclusion=="success" or .conclusion=="neutral"))] | length' 2> /dev/null || echo "0")
+      if ((ok_here == runs_len)); then
+        echo "DEBUG: ctx=$ctx decision=passed via check-runs"
+        ((passed_count++))
+        continue
+      fi
+
+      local fail_here
+      fail_here=$(echo "$runs_json" | jq '[.[] | select(.status=="completed" and (.conclusion=="failure" or .conclusion=="timed_out" or .conclusion=="cancelled" or .conclusion=="action_required"))] | length' 2> /dev/null || echo "0")
+      if ((fail_here > 0)); then
+        echo "DEBUG: ctx=$ctx decision=failed via check-runs"
         ((failed_count++))
       else
+        echo "DEBUG: ctx=$ctx decision=pending via check-runs"
         ((pending_count++))
       fi
+
+    else
+      # Fallback to statuses for this context
+      local latest_state
+      latest_state=$(jq -r --arg name "$ctx" '[.statuses[] | select(.context==$name)] | sort_by(.updated_at) | last | .state // ""' < "$st_stdout_file" 2> /dev/null || echo "")
+      echo "DEBUG: evaluating_ctx=$ctx via statuses state=$latest_state"
+      case "$latest_state" in
+        success)
+          echo "DEBUG: ctx=$ctx decision=passed via statuses"
+          ((passed_count++))
+          ;;
+        failure | error)
+          echo "DEBUG: ctx=$ctx decision=failed via statuses"
+          ((failed_count++))
+          ;;
+        pending | "")
+          echo "DEBUG: ctx=$ctx decision=pending via statuses"
+          ((pending_count++))
+          ;;
+      esac
     fi
   done
 
-  echo "DEBUG: total_required=$total_required passed_count=$passed_count pending_count=$pending_count failed_count=$failed_count"
+  echo "DEBUG: summary total_required=${#required_checks[@]} passed_count=$passed_count pending_count=$pending_count failed_count=$failed_count"
 
-  if [[ $passed_count -eq $total_required ]]; then
+  rm -f "$bp_stdout_file" "$bp_stderr_file" "$st_stdout_file" "$st_stderr_file" "$cr_stdout_file" "$cr_stderr_file"
+
+  if ((passed_count == ${#required_checks[@]})); then
+    echo "DEBUG: Decision: return 0 (all required checks passed)."
     return 0
-  elif [[ $pending_count -gt 0 ]]; then
-    return 1
-  elif [[ $failed_count -gt 0 ]]; then
-    return 1
-  else
-    return 3
   fi
+  if ((failed_count > 0)); then
+    echo "DEBUG: Decision: return 1 (one or more required checks failed or were skipped)."
+    return 1
+  fi
+  if ((pending_count > 0)); then
+    echo "DEBUG: Decision: return 1 (one or more required checks still pending)."
+    return 1
+  fi
+
+  echo "DEBUG: Decision: return 3 (unexpected state; treating as no required checks)."
+  return 3
 }
 
 # --- Decide which token to use ---
@@ -210,7 +350,7 @@ case $status_code in
     ;;
   1)
     echo "Required checks are still pending — waiting for them to pass..."
-    max_attempts=40 # ~10 minutes if sleep=15
+    max_attempts=8 # ~10 minutes if sleep=15
     attempt=1
     while ((attempt <= max_attempts)); do
       sleep 15
