@@ -1,3 +1,17 @@
+## 1.3.0 - 2025-09-02
+
+# [1.3.0](https://github.com/YasharF/semantic-auto-release/compare/v1.2.0...v1.3.0) (2025-09-02)
+
+
+### Bug Fixes
+
+* sync templates ([f2b2e17](https://github.com/YasharF/semantic-auto-release/commit/f2b2e17f9c9d23a8a4e877c8131440e0478f4723))
+
+
+### Features
+
+* don't bug the user about credentials if we don't even need a new release ([ceb5b97](https://github.com/YasharF/semantic-auto-release/commit/ceb5b97dbe109e88f1f48bb66f4c77dce735e936))
+
 ## 1.2.0 - 2025-09-02
 
 # [1.2.0](https://github.com/YasharF/semantic-auto-release/compare/v1.1.1...v1.2.0) (2025-09-02)
