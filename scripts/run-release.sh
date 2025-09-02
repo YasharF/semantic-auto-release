@@ -48,19 +48,22 @@ check_required_checks_status() {
 
   # Empty arrays case — could be no required checks OR required checks that never ran
   if [[ "$total_required" -eq 0 && "$total_runs" -eq 0 ]]; then
-    echo "DEBUG: No statuses or check runs visible — probing mergeability..."
-    local merge_output
-    merge_output=$(gh pr merge "$pr_number" --squash --dry-run 2>&1)
+    echo "DEBUG: No statuses or check runs visible — probing mergeability via mergeStateStatus..."
+    local merge_state
+    merge_state=$(gh pr view "$pr_number" --repo "$repo" --json mergeStateStatus --jq '.mergeStateStatus')
     local merge_exit=$?
-    echo "DEBUG: gh pr merge --dry-run exit code: $merge_exit"
-    echo "DEBUG: gh pr merge --dry-run output:"
-    echo "$merge_output"
+    echo "DEBUG: gh pr view mergeStateStatus exit code: $merge_exit"
+    echo "DEBUG: mergeStateStatus=$merge_state"
 
-    if echo "$merge_output" | grep -qi "base branch policy prohibits the merge"; then
-      echo "DEBUG: Detected branch policy block — treating as required checks exist but none have started."
+    # Possible values: CLEAN, BLOCKED, DIRTY, DRAFT, HAS_HOOKS, UNKNOWN, UNSTABLE
+    if [[ "$merge_state" == "BLOCKED" ]]; then
+      echo "DEBUG: mergeStateStatus=BLOCKED — treating as required checks exist but none have started (PAT needed)."
       return 2
+    elif [[ "$merge_state" == "CLEAN" || "$merge_state" == "HAS_HOOKS" || "$merge_state" == "UNSTABLE" ]]; then
+      echo "DEBUG: mergeStateStatus=$merge_state — mergeable without admin rights."
+      return 3
     else
-      echo "DEBUG: No branch policy block detected — treating as no required checks configured."
+      echo "DEBUG: mergeStateStatus=$merge_state — treating conservatively as no required checks configured."
       return 3
     fi
   fi
