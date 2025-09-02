@@ -175,10 +175,8 @@ case $status_code in
     fi
     ;;
   2)
-    echo "ERROR: Required checks exist but none have started."
-    echo "This usually happens when the PR was created with the default GITHUB_TOKEN"
-    echo "and the repo has required status checks from other workflows."
-    echo "Use a fine-grained PAT with 'Contents: Read & write' and 'Pull requests: Read & write' to create the PR."
+    echo -e "\033[1;31mERROR:\033[0m Required checks never started - likely due to checks on a protected branch with the current scope."
+    echo -e "\033[1;34mSet RELEASE_PAT\033[0m to a fine-grained personal access token with 'Contents: Read & write' and 'Pull requests: Read & write' permissions."
     exit 1
     ;;
   3)
