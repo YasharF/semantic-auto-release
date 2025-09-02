@@ -27,10 +27,10 @@ check_required_checks_status() {
   # Try to get required checks from branch protection
   local required_checks_json required_checks
   if required_checks_json=$(gh api "repos/$repo/branches/$base_branch/protection" --jq '.required_status_checks.contexts' 2> /dev/null); then
-    echo "DEBUG: Required checks from branch protection: $required_checks_json"
+    echo "DEBUG: Required checks from branch protection API: $required_checks_json"
     mapfile -t required_checks < <(echo "$required_checks_json" | jq -r '.[]')
   else
-    echo "DEBUG: Could not read branch protection (insufficient token scope or no protection). Falling back."
+    echo "DEBUG: Could not read branch protection (insufficient token scope or no protection)."
     required_checks=()
   fi
 
@@ -38,18 +38,19 @@ check_required_checks_status() {
   if [[ ${#required_checks[@]} -eq 0 ]]; then
     local statuses_json
     statuses_json=$(gh api "repos/$repo/commits/$head_sha/status") || return 3
-    echo "DEBUG: Status contexts from /status: $(echo "$statuses_json" | jq -r '.statuses[].context')"
+    echo "DEBUG: Status contexts from /status API: $(echo "$statuses_json" | jq -r '.statuses[].context')"
     mapfile -t required_checks < <(echo "$statuses_json" | jq -r '.statuses[].context')
   fi
 
   local total_required=${#required_checks[@]}
+  echo "DEBUG: total_required=$total_required required_checks_list=${required_checks[*]}"
   if [[ $total_required -eq 0 ]]; then
     echo "DEBUG: No required checks detected."
     return 3
   fi
 
-  # Wait up to 30 seconds (5 × 6s) for all required checks to appear
-  local checks_json attempt=1 max_attempts=5
+  # Wait up to 2 minutes (debug cap) for all required checks to appear
+  local checks_json attempt=1 max_attempts=40 # 40 × 3s = 120s
   while ((attempt <= max_attempts)); do
     checks_json=$(gh api "repos/$repo/commits/$head_sha/check-runs") || return 3
     local found_all=true
@@ -65,9 +66,14 @@ check_required_checks_status() {
       break
     fi
     echo "DEBUG: Attempt $attempt — not all required checks found yet, retrying..."
-    sleep 6
+    sleep 3
     ((attempt++))
   done
+
+  if ((attempt > max_attempts)); then
+    echo "DEBUG: Timed out after $((max_attempts * 3)) seconds waiting for required checks to appear."
+    return 2
+  fi
 
   echo "DEBUG: Final check runs JSON after $attempt attempt(s):"
   echo "$checks_json" | jq .
