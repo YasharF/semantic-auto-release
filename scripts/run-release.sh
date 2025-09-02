@@ -42,10 +42,30 @@ else
 fi
 
 # --- Check branch protection for required status checks ---
-REQUIRED_CHECKS=$(curl -s -H "Authorization: Bearer ${GITHUB_TOKEN}" \
-  "https://api.github.com/repos/${GITHUB_REPOSITORY}/branches/${DEFAULT_BRANCH}/protection" \
-  | jq -r '.required_status_checks.contexts | @csv' 2> /dev/null || echo "")
 
+echo "DEBUG: Fetching branch protection info for ${GITHUB_REPOSITORY} / ${DEFAULT_BRANCH}..."
+raw_protection_json=$(curl -s -w "\nHTTP_STATUS:%{http_code}\n" \
+  -H "Authorization: Bearer ${GITHUB_TOKEN}" \
+  "https://api.github.com/repos/${GITHUB_REPOSITORY}/branches/${DEFAULT_BRANCH}/protection")
+
+# Split out the HTTP status and body
+http_status=$(echo "$raw_protection_json" | sed -n 's/^HTTP_STATUS://p')
+response_body=$(echo "$raw_protection_json" | sed '/^HTTP_STATUS:/d')
+
+echo "DEBUG: HTTP status: $http_status"
+echo "DEBUG: Raw response body:"
+echo "$response_body"
+
+# Now run jq on the body
+REQUIRED_CHECKS=$(echo "$response_body" | jq -r '.required_status_checks.contexts | @csv' 2> /dev/null || echo "")
+echo "DEBUG: REQUIRED_CHECKS parsed as: '$REQUIRED_CHECKS'"
+
+# REQUIRED_CHECKS=$(curl -s -H "Authorization: Bearer ${GITHUB_TOKEN}" \
+#   "https://api.github.com/repos/${GITHUB_REPOSITORY}/branches/${DEFAULT_BRANCH}/protection" \
+#   | jq -r '.required_status_checks.contexts | @csv' 2> /dev/null || echo "")
+
+echo "$GITHUB_REPOSITORY"
+echo "$DEFAULT_BRANCH"
 echo "$REQUIRED_CHECKS"
 
 if [[ "$USING_PAT" == false && -n "$REQUIRED_CHECKS" && "$REQUIRED_CHECKS" != "null" ]]; then
