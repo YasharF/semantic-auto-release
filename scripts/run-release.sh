@@ -6,12 +6,16 @@ set -euo pipefail
 
 REPO="${GITHUB_REPOSITORY}"
 
-# --- Function: check_required_checks_status ---
-# Arguments: $1 = repo (owner/name), $2 = PR number
-# Returns: 0 if all required checks passed
-#          1 if required checks exist but are pending/failed
-#          2 if required checks exist but none have started (PAT needed)
-#          3 if no required checks configured
+# --- Decide which token to use ---
+if [[ -n "${RELEASE_PAT:-}" ]]; then
+  echo "PAT provided. Using PAT for GitHub CLI and API calls."
+  export GH_TOKEN="$RELEASE_PAT"
+  USING_PAT=true
+else
+  echo "No PAT provided. Using the Actions-provided GITHUB_TOKEN."
+  export GH_TOKEN="$GITHUB_TOKEN"
+  USING_PAT=false
+fi
 # --- Function: check_required_checks_status ---
 # Arguments: $1 = repo (owner/name), $2 = PR number
 # Returns: 0 if all required checks passed
@@ -263,17 +267,6 @@ check_required_checks_status() {
   echo "DEBUG: Decision: return 3 (unexpected state; treating as no required checks)."
   return 3
 }
-
-# --- Decide which token to use ---
-if [[ -n "${RELEASE_PAT:-}" ]]; then
-  echo "PAT provided. Using PAT for GitHub CLI and API calls."
-  export GH_TOKEN="$RELEASE_PAT"
-  USING_PAT=true
-else
-  echo "No PAT provided. Using the Actions-provided GITHUB_TOKEN."
-  export GH_TOKEN="$GITHUB_TOKEN"
-  USING_PAT=false
-fi
 
 # --- Run semantic-release to export version, notes, and branch ---
 export release_step=create_release_files
