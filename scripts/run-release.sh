@@ -28,16 +28,15 @@ poll_checks() {
   local attempt=1 max_attempts=10
   while ((attempt <= max_attempts)); do
     local checks_json
-    checks_json=$(gh api "/repos/$repo/commits/$head_sha/check-runs" --jq '.check_runs' 2> /dev/null || echo "[]")
-
-    local count
-    count=$(echo "$checks_json" | jq 'length')
-    if [[ "$count" -eq 0 ]]; then
-      echo "Attempt $attempt/$max_attempts: No checks found yet."
+    checks_json=$(gh api "/repos/$repo/commits/$head_sha/check-runs" --jq '.check_runs')
+    echo "$checks_json"
+    # If no checks yet, wait and retry
+    if [[ "$(echo "$checks_json" | jq 'length')" -eq 0 ]]; then
       if ((attempt == max_attempts)); then
-        echo "INFO: No checks were detected within the wait window."
-        return 3
+        echo "ERROR: No checks were found after our timeout. Aborting the release process."
+        return 2
       fi
+      echo "No checks found yet - Attempt $attempt of $max_attempts."
       sleep 30
       ((attempt++))
       continue
