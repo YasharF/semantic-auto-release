@@ -21,6 +21,7 @@ check_pat_valid() {
   local token="$1"
   local login
   login=$(curl -s -H "Authorization: Bearer ${token}" https://api.github.com/user | jq -r .login)
+  echo "Login: $login"
   [[ "$login" != "null" && -n "$login" ]]
 }
 
