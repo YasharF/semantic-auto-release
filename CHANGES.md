@@ -1,3 +1,20 @@
+## 1.2.0 - 2025-09-02
+
+# [1.2.0](https://github.com/YasharF/semantic-auto-release/compare/v1.1.1...v1.2.0) (2025-09-02)
+
+
+### Bug Fixes
+
+* don't double run the conventional commits workflow ([25e8a56](https://github.com/YasharF/semantic-auto-release/commit/25e8a564d05d62103da2cd9399294a397ef0e383))
+* pr title check workflow ([cd957e7](https://github.com/YasharF/semantic-auto-release/commit/cd957e7bc6354f3aa32ef88035a2b743d5cdf216))
+
+
+### Features
+
+* add commitlint to workflows ([9a30c33](https://github.com/YasharF/semantic-auto-release/commit/9a30c33e411558945c94cb325a5a99c3b6b4e271))
+* add setup script ([6bcacbc](https://github.com/YasharF/semantic-auto-release/commit/6bcacbc8483550d99fa08cbeb49c89d539aebbfe))
+* add support for protected default branch with status checks ([fa7779d](https://github.com/YasharF/semantic-auto-release/commit/fa7779dfa70d72007df79061d2a06e5b8c774c7d))
+
 ## 1.1.1 - 2025-09-01
 
 ## [1.1.1](https://github.com/YasharF/semantic-auto-release/compare/v1.1.0...v1.1.1) (2025-09-01)
