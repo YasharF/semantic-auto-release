@@ -16,24 +16,37 @@ check_required_checks_status() {
   local repo="$1"
   local pr_number="$2"
 
+  echo "DEBUG: Checking required checks status for $repo PR #$pr_number"
+
   # Get the latest commit SHA for this PR
   local head_sha
   head_sha=$(gh pr view "$pr_number" --repo "$repo" --json headRefOid --jq '.headRefOid') || return 3
+  echo "DEBUG: head_sha=$head_sha"
 
   # Fetch combined status + check runs for that commit
   local status_json checks_json
   status_json=$(gh api repos/"$repo"/commits/"$head_sha"/status) || return 3
   checks_json=$(gh api repos/"$repo"/commits/"$head_sha"/check-runs) || return 3
 
+  echo "DEBUG: Combined status JSON:"
+  echo "$status_json" | jq .
+
+  echo "DEBUG: Check runs JSON:"
+  echo "$checks_json" | jq .
+
   # Count required contexts from combined status
   local total_required
   total_required=$(echo "$status_json" | jq '[.statuses[] | select(.context != null)] | length')
+  echo "DEBUG: total_required=$total_required"
+
   if [[ "$total_required" -eq 0 ]]; then
     return 3 # no required checks configured
   fi
 
   local passed
   passed=$(echo "$status_json" | jq '[.statuses[] | select(.state == "success")] | length')
+  echo "DEBUG: passed=$passed"
+
   if [[ "$passed" -eq "$total_required" ]]; then
     return 0 # all passed
   fi
@@ -41,6 +54,8 @@ check_required_checks_status() {
   # See if any check runs exist at all
   local total_runs
   total_runs=$(echo "$checks_json" | jq '.total_count')
+  echo "DEBUG: total_runs=$total_runs"
+
   if [[ "$total_runs" -eq 0 ]]; then
     return 2 # required checks exist but none have started
   fi
