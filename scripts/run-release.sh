@@ -19,7 +19,7 @@ else
 fi
 
 # --- Function: poll all checks until pass/fail/timeout ---
-# Returns: 0 = all success, 1 = fail, 2 = stuck after timeout
+# Returns: 0 = all success, 1 = fail, 2 = stuck after timeout, 3 = no checks observed
 poll_checks() {
   local repo="$1" pr_number="$2"
   local head_sha
@@ -28,19 +28,23 @@ poll_checks() {
   local attempt=1 max_attempts=10
   while ((attempt <= max_attempts)); do
     local checks_json
-    checks_json=$(gh api "/repos/$repo/commits/$head_sha/check-runs" --jq '.check_runs')
-    echo "$checks_json"
-    # If no checks yet, wait and retry
-    if [[ "$(echo "$checks_json" | jq 'length')" -eq 0 ]]; then
+    checks_json=$(gh api "/repos/$repo/commits/$head_sha/check-runs" --jq '.check_runs' 2> /dev/null || echo "[]")
+
+    local count
+    count=$(echo "$checks_json" | jq 'length')
+    if [[ "$count" -eq 0 ]]; then
+      echo "Attempt $attempt/$max_attempts: No checks found yet."
       if ((attempt == max_attempts)); then
-        echo "ERROR: No checks were found after our timeout. Aborting the release process."
-        return 2
+        echo "INFO: No checks were detected within the wait window."
+        return 3
       fi
-      echo "No checks found yet - Attempt $attempt of $max_attempts."
       sleep 30
       ((attempt++))
       continue
     fi
+
+    echo "Attempt $attempt/$max_attempts: Found $count check(s):"
+    echo "$checks_json" | jq -r '.[] | "  - \(.name): status=\(.status), conclusion=\(.conclusion // "n/a")"'
 
     local all_success=true
     for row in $(echo "$checks_json" | jq -r '.[] | @base64'); do
@@ -150,6 +154,7 @@ echo "Waiting for 30 seconds for GitHub to setup the pull request."
 sleep 30 # Give GitHub a moment to register the PR and any associated checks
 
 # --- Merge logic ---
+CHECKS_UNOBSERVED=false
 if ! $USING_PAT; then
   if ! gh pr merge "$PR_NUMBER" --squash 2> /dev/null; then
     echo "ERROR: Pull request merge failed while using the action provided GITHUB_TOKEN."
@@ -157,23 +162,25 @@ if ! $USING_PAT; then
     exit 1
   fi
 else
-  # PAT provided — poll checks
-  if ! poll_checks "$REPO" "$PR_NUMBER"; then
-    # poll_checks already printed Case 1.2 or 1.3 message
-    exit 1
-  fi
+  rc=$(poll_checks "$REPO" "$PR_NUMBER") || rc=$?
+  case "$rc" in
+    0) ;;                        # all good
+    1 | 2) exit 1 ;;             # fail or stuck
+    3) CHECKS_UNOBSERVED=true ;; # no checks found — proceed but warn
+    *) exit 1 ;;
+  esac
 fi
 
 echo "=== Merging PR ==="
 if ! gh pr merge "$PR_NUMBER" --squash; then
-  if $USING_PAT; then
+  if $USING_PAT && $CHECKS_UNOBSERVED; then
     echo "ERROR: Merge failed and we could not read PR checks or their status."
     echo "The RELEASE_PAT may be missing permissions: {Contents: Read & write, Pull requests: Read & write}"
   fi
   exit 1
 fi
 
-if $USING_PAT; then
+if $USING_PAT && $CHECKS_UNOBSERVED; then
   echo "WARNING: Merge succeeded but we could not read PR checks or their status."
   echo "If your pull requests have checks, verify that RELEASE_PAT has the required permissions: {Contents: Read & write, Pull requests: Read & write}"
 fi
