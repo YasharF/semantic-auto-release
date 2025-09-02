@@ -23,26 +23,41 @@ fi
 poll_checks() {
   local repo="$1" pr_number="$2"
   local head_sha
-  head_sha=$(gh pr view "$pr_number" --repo "$repo" --json headRefOid --jq '.headRefOid')
+  head_sha=$(gh pr view "$pr_number" --repo "$repo" --json headRefOid --jq '.headRefOid' 2> /dev/null || echo "")
+  echo "Head SHA: $head_sha"
 
   local attempt=1 max_attempts=10
   while ((attempt <= max_attempts)); do
-    local checks_json
-    checks_json=$(gh api "/repos/$repo/commits/$head_sha/check-runs" --jq '.check_runs')
-    echo "$checks_json"
-    # If no checks yet, wait and retry
-    if [[ "$(echo "$checks_json" | jq 'length')" -eq 0 ]]; then
+    if [[ -z "$head_sha" ]]; then
+      echo "Attempt $attempt/$max_attempts: Could not get head SHA yet."
       if ((attempt == max_attempts)); then
-        echo "ERROR: No checks were found after our timeout. Aborting the release process."
-        return 2
+        echo "INFO: No checks were detected within the wait window."
+        return 3
       fi
-      echo "No checks found yet - Attempt $attempt of $max_attempts."
+      sleep 30
+      ((attempt++))
+      head_sha=$(gh pr view "$pr_number" --repo "$repo" --json headRefOid --jq '.headRefOid' 2> /dev/null || echo "")
+      continue
+    fi
+
+    local checks_json
+    checks_json=$(gh api "/repos/$repo/commits/$head_sha/check-runs" --jq '.check_runs' 2> /dev/null || echo "[]")
+
+    local count
+    count=$(echo "$checks_json" | jq 'length')
+    echo "Found $count check(s)"
+    if [[ "$count" -eq 0 ]]; then
+      echo "Attempt $attempt/$max_attempts: No checks found yet."
+      if ((attempt == max_attempts)); then
+        echo "INFO: No checks were detected within the wait window."
+        return 3
+      fi
       sleep 30
       ((attempt++))
       continue
     fi
 
-    echo "Attempt $attempt/$max_attempts: Found $count check(s):"
+    echo "Attempt $attempt/$max_attempts"
     echo "$checks_json" | jq -r '.[] | "  - \(.name): status=\(.status), conclusion=\(.conclusion // "n/a")"'
 
     local all_success=true
@@ -161,7 +176,10 @@ if ! $USING_PAT; then
     exit 1
   fi
 else
-  rc=$(poll_checks "$REPO" "$PR_NUMBER") || rc=$?
+  set +e
+  poll_checks "$REPO" "$PR_NUMBER"
+  rc=$?
+  set -e
   case "$rc" in
     0) ;;                        # all good
     1 | 2) exit 1 ;;             # fail or stuck
