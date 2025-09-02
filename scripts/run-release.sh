@@ -49,10 +49,19 @@ check_required_checks_status() {
   # Empty arrays case — could be no required checks OR required checks that never ran
   if [[ "$total_required" -eq 0 && "$total_runs" -eq 0 ]]; then
     echo "DEBUG: No statuses or check runs visible — probing mergeability..."
-    if gh pr merge "$pr_number" --squash --dry-run 2>&1 | grep -q "base branch policy prohibits the merge"; then
-      return 2 # required checks exist but none have started (PAT needed)
+    local merge_output
+    merge_output=$(gh pr merge "$pr_number" --squash --dry-run 2>&1)
+    local merge_exit=$?
+    echo "DEBUG: gh pr merge --dry-run exit code: $merge_exit"
+    echo "DEBUG: gh pr merge --dry-run output:"
+    echo "$merge_output"
+
+    if echo "$merge_output" | grep -qi "base branch policy prohibits the merge"; then
+      echo "DEBUG: Detected branch policy block — treating as required checks exist but none have started."
+      return 2
     else
-      return 3 # no required checks configured
+      echo "DEBUG: No branch policy block detected — treating as no required checks configured."
+      return 3
     fi
   fi
 
