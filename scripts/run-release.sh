@@ -21,7 +21,6 @@ check_pat_valid() {
   local token="$1"
   local login
   login=$(curl -s -H "Authorization: Bearer ${token}" https://api.github.com/user | jq -r .login)
-  echo "Login: $login"
   [[ "$login" != "null" && -n "$login" ]]
 }
 
@@ -46,6 +45,8 @@ fi
 REQUIRED_CHECKS=$(curl -s -H "Authorization: Bearer ${GITHUB_TOKEN}" \
   "https://api.github.com/repos/${GITHUB_REPOSITORY}/branches/${DEFAULT_BRANCH}/protection" \
   | jq -r '.required_status_checks.contexts | @csv' 2> /dev/null || echo "")
+
+echo "$REQUIRED_CHECKS"
 
 if [[ "$USING_PAT" == false && -n "$REQUIRED_CHECKS" && "$REQUIRED_CHECKS" != "null" ]]; then
   echo "ERROR: Default branch '${DEFAULT_BRANCH}' has required status checks (other workflows): $REQUIRED_CHECKS"
