@@ -1,3 +1,25 @@
+## 1.3.0 - 2025-09-02
+
+# [1.3.0](https://github.com/YasharF/semantic-auto-release/compare/v1.2.0...v1.3.0) (2025-09-02)
+
+
+### Bug Fixes
+
+* add checks and statuses read permissions ([190cf8b](https://github.com/YasharF/semantic-auto-release/commit/190cf8bd3d4ffae8ef1e82e73740ef001e08a243))
+* add more debug code ([a3ea0d3](https://github.com/YasharF/semantic-auto-release/commit/a3ea0d39b4255e99b6b02a8d2eb81c70e9a585bf))
+* add more debug code ([ee8aefe](https://github.com/YasharF/semantic-auto-release/commit/ee8aefee27792079f26b6e3da05555314548b554))
+* adjust error message ([562130e](https://github.com/YasharF/semantic-auto-release/commit/562130eba0cc6dcf587f1fc76f7288c9caac4584))
+* identify need for PAN ([e5571fa](https://github.com/YasharF/semantic-auto-release/commit/e5571fa758a21c678791c6f3e68470cd490e28bd))
+* more debug code ([5427c02](https://github.com/YasharF/semantic-auto-release/commit/5427c028cd65ea0967626e19434775130b043b51))
+* rewrite run-release check status detection ([2646c94](https://github.com/YasharF/semantic-auto-release/commit/2646c9413b2f27b38e9d21bcac3522f8f55287fb))
+* switching to cli for status ([89bc474](https://github.com/YasharF/semantic-auto-release/commit/89bc4742188b404b8d39edd7ac36db64fa22d23e))
+* sync templates ([f2b2e17](https://github.com/YasharF/semantic-auto-release/commit/f2b2e17f9c9d23a8a4e877c8131440e0478f4723))
+
+
+### Features
+
+* don't bug the user about credentials if we don't even need a new release ([ceb5b97](https://github.com/YasharF/semantic-auto-release/commit/ceb5b97dbe109e88f1f48bb66f4c77dce735e936))
+
 ## 1.2.0 - 2025-09-02
 
 # [1.2.0](https://github.com/YasharF/semantic-auto-release/compare/v1.1.1...v1.2.0) (2025-09-02)
