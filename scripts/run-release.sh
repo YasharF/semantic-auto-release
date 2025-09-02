@@ -36,7 +36,7 @@ poll_checks() {
         echo "ERROR: No checks were found after our timeout. Aborting the release process."
         return 2
       fi
-      echo "No checks found yet - Attempt $attempt of $_max_attempts."
+      echo "No checks found yet - Attempt $attempt of $max_attempts."
       sleep 30
       ((attempt++))
       continue
