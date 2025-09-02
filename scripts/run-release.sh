@@ -23,11 +23,25 @@ check_required_checks_status() {
   head_sha=$(gh pr view "$pr_number" --repo "$repo" --json headRefOid --jq '.headRefOid') || return 3
   echo "DEBUG: head_sha=$head_sha"
 
-  # Fetch combined status + check runs for that commit
-  local status_json checks_json
-  status_json=$(gh api repos/"$repo"/commits/"$head_sha"/status) || return 3
-  checks_json=$(gh api repos/"$repo"/commits/"$head_sha"/check-runs) || return 3
+  # Retry loop to wait for check runs to appear
+  local checks_json total_runs attempt=1 max_attempts=5
+  while ((attempt <= max_attempts)); do
+    checks_json=$(gh api repos/"$repo"/commits/"$head_sha"/check-runs) || return 3
+    total_runs=$(echo "$checks_json" | jq '.total_count')
+    echo "DEBUG: Attempt $attempt — total_runs=$total_runs"
+    if [[ "$total_runs" -gt 0 ]]; then
+      break
+    fi
+    sleep 3
+    ((attempt++))
+  done
 
+  echo "DEBUG: Final check runs JSON after $attempt attempt(s):"
+  echo "$checks_json" | jq .
+
+  # Fetch combined status for completeness
+  local status_json
+  status_json=$(gh api repos/"$repo"/commits/"$head_sha"/status) || return 3
   echo "DEBUG: Combined status JSON:"
   echo "$status_json" | jq .
   echo "DEBUG: Check runs JSON:"
@@ -176,7 +190,7 @@ case $status_code in
     ;;
   2)
     echo -e "\033[1;31mERROR:\033[0m Required checks never started - likely due to checks on a protected branch with the current scope."
-    echo -e "\033[1;34mSet RELEASE_PAT\033[0m to a fine-grained personal access token with 'Contents: Read & write' and 'Pull requests: Read & write' permissions."
+    echo -e "Set \033[1;34mRELEASE_PAT\033[0m to a fine-grained personal access token with 'Contents: Read & write' and 'Pull requests: Read & write' permissions."
     exit 1
     ;;
   3)
