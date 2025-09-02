@@ -1,3 +1,12 @@
+## 1.3.1 - 2025-09-02
+
+## [1.3.1](https://github.com/YasharF/semantic-auto-release/compare/v1.3.0...v1.3.1) (2025-09-02)
+
+
+### Bug Fixes
+
+* wait 30 sec after creating a PR for it to created and configured ([e9ffded](https://github.com/YasharF/semantic-auto-release/commit/e9ffdede665747028b27953eb58329b6ba488db1))
+
 ## 1.3.0 - 2025-09-02
 
 # [1.3.0](https://github.com/YasharF/semantic-auto-release/compare/v1.2.0...v1.3.0) (2025-09-02)
