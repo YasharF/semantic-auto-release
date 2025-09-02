@@ -146,6 +146,9 @@ PR_URL=$(gh pr create \
 
 PR_NUMBER=$(gh pr view "$PR_URL" --json number --jq '.number')
 
+echo "Waiting for 30 seconds for GitHub to setup the pull request."
+sleep 30 # Give GitHub a moment to register the PR and any associated checks
+
 # --- Merge logic ---
 if ! $USING_PAT; then
   if ! gh pr merge "$PR_NUMBER" --squash 2> /dev/null; then
