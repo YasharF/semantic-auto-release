@@ -1,3 +1,12 @@
+## 1.3.4 - 2025-09-02
+
+## [1.3.4](https://github.com/YasharF/semantic-auto-release/compare/v1.3.3...v1.3.4) (2025-09-02)
+
+
+### Bug Fixes
+
+* distinguish no checks found ([efab211](https://github.com/YasharF/semantic-auto-release/commit/efab2116df05ab0c19e0718045e202c0ce3cd719))
+
 ## 1.3.3 - 2025-09-02
 
 ## [1.3.3](https://github.com/YasharF/semantic-auto-release/compare/v1.3.2...v1.3.3) (2025-09-02)
