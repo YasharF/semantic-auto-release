@@ -28,6 +28,7 @@ poll_checks() {
 
   local attempt=1 max_attempts=10
   while ((attempt <= max_attempts)); do
+    echo "----------------"
     if [[ -z "$head_sha" ]]; then
       echo "Attempt $attempt/$max_attempts: Could not get head SHA yet."
       if ((attempt == max_attempts)); then
