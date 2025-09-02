@@ -4,11 +4,17 @@ set -euo pipefail
 : "${CHANGELOG_FILE:?CHANGELOG_FILE env var is required}"
 : "${RUN_PRETTIER_ON_CHANGELOG:?RUN_PRETTIER_ON_CHANGELOG env var is required}"
 
-REPO="${GITHUB_REPOSITORY}"
+# --- Run semantic-release to export version, notes, and branch ---
+export release_step=create_release_files
+npx semantic-release --no-ci --dry-run --extends ./release.config.js
 
-# --- Determine default branch from repo metadata ---
-DEFAULT_BRANCH=$(curl -s -H "Authorization: Bearer ${GITHUB_TOKEN}" \
-  "https://api.github.com/repos/${REPO}" | jq -r .default_branch)
+VERSION=$(cat version.txt)
+DEFAULT_BRANCH=$(cat branch.txt) # authoritative from plugin for versioning
+
+if [[ -z "$VERSION" ]]; then
+  echo "No release necessary."
+  exit 0
+fi
 
 # --- Function to check if PAT is valid ---
 check_pat_valid() {
@@ -37,7 +43,7 @@ fi
 
 # --- Check branch protection for required status checks ---
 REQUIRED_CHECKS=$(curl -s -H "Authorization: Bearer ${GITHUB_TOKEN}" \
-  "https://api.github.com/repos/${REPO}/branches/${DEFAULT_BRANCH}/protection" \
+  "https://api.github.com/repos/${GITHUB_REPOSITORY}/branches/${DEFAULT_BRANCH}/protection" \
   | jq -r '.required_status_checks.contexts | @csv' 2> /dev/null || echo "")
 
 if [[ "$USING_PAT" == false && -n "$REQUIRED_CHECKS" && "$REQUIRED_CHECKS" != "null" ]]; then
@@ -46,18 +52,8 @@ if [[ "$USING_PAT" == false && -n "$REQUIRED_CHECKS" && "$REQUIRED_CHECKS" != "n
   echo "To merge the updated changelog and package.json (version bump), this workflow must open a pull request that triggers and passes the required checks."
   echo "Add a Fine-grained GitHub Personal Access Token (PAT) with [ Contents: Read & write, Pull requests: Read & write ] permissions for the repo as a secret named RELEASE_PAT in your repository settings on GitHub."
   exit 1
-fi
-
-# --- Run semantic-release to export version, notes, and branch ---
-export release_step=create_release_files
-npx semantic-release --no-ci --dry-run --extends ./release.config.js
-
-VERSION=$(cat version.txt)
-DEFAULT_BRANCH=$(cat branch.txt) # authoritative from plugin for versioning
-
-if [[ -z "$VERSION" ]]; then
-  echo "No release necessary."
-  exit 0
+else
+  echo "No required checks for a pull request merge."
 fi
 
 # --- Record the base SHA of the default branch before we start ---
