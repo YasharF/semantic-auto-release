@@ -47,6 +47,7 @@ check_required_checks_status() {
   # Branch protection API (raw + parsed)
   local bp_stdout_file bp_stderr_file bp_rc
   bp_stdout_file=$(mktemp) bp_stderr_file=$(mktemp)
+  echo "DEBUG: api call for repos/$repo/branches/$base_branch/protection"
   gh api "repos/$repo/branches/$base_branch/protection" 1> "$bp_stdout_file" 2> "$bp_stderr_file"
   bp_rc=$?
   echo "DEBUG: branch_protection_api_rc=$bp_rc"
@@ -66,6 +67,7 @@ check_required_checks_status() {
   # Commit statuses API (raw + parsed) — always fetch for evaluation/fallback
   local st_stdout_file st_stderr_file st_rc
   st_stdout_file=$(mktemp) st_stderr_file=$(mktemp)
+  echo "DEBUG: api call for repos/$repo/commits/$head_sha/status"
   gh api "repos/$repo/commits/$head_sha/status" 1> "$st_stdout_file" 2> "$st_stderr_file"
   st_rc=$?
   echo "DEBUG: statuses_api_rc=$st_rc"
@@ -123,6 +125,7 @@ check_required_checks_status() {
     # Refresh both check-runs and statuses so we can consider either signal
     : > "$cr_stdout_file"
     : > "$cr_stderr_file"
+    echo "DEBUG: api call for repos/$repo/commits/$head_sha/check-runs"
     gh api "repos/$repo/commits/$head_sha/check-runs" 1> "$cr_stdout_file" 2> "$cr_stderr_file"
     local cr_rc=$?
     local found_all=true
@@ -329,7 +332,7 @@ PR_URL=$(gh pr create \
   --head "$TEMP_BRANCH" \
   --title "chore(release): ${VERSION}" \
   --body "$PR_BODY")
-echo "$PR_URL"
+echo "DEBUG: PR URL $PR_URL"
 
 PR_NUMBER=$(gh pr view "$PR_URL" --json number --jq '.number')
 
