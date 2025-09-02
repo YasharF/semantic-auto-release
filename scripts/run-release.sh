@@ -10,7 +10,7 @@ REPO="${GITHUB_REPOSITORY}"
 # Arguments: $1 = repo (owner/name), $2 = PR number
 # Returns: 0 if all required checks passed
 #          1 if required checks exist but are pending
-#          2 if required checks exist but none have started
+#          2 if required checks exist but none have started (PAT needed)
 #          3 if no required checks configured
 check_required_checks_status() {
   local repo="$1"
@@ -30,37 +30,33 @@ check_required_checks_status() {
 
   echo "DEBUG: Combined status JSON:"
   echo "$status_json" | jq .
-
   echo "DEBUG: Check runs JSON:"
   echo "$checks_json" | jq .
 
-  # Count required contexts from combined status
-  local total_required
+  local total_required passed total_runs
   total_required=$(echo "$status_json" | jq '[.statuses[] | select(.context != null)] | length')
-  echo "DEBUG: total_required=$total_required"
-
-  if [[ "$total_required" -eq 0 ]]; then
-    return 3 # no required checks configured
-  fi
-
-  local passed
   passed=$(echo "$status_json" | jq '[.statuses[] | select(.state == "success")] | length')
-  echo "DEBUG: passed=$passed"
-
-  if [[ "$passed" -eq "$total_required" ]]; then
-    return 0 # all passed
-  fi
-
-  # See if any check runs exist at all
-  local total_runs
   total_runs=$(echo "$checks_json" | jq '.total_count')
+
+  echo "DEBUG: total_required=$total_required"
+  echo "DEBUG: passed=$passed"
   echo "DEBUG: total_runs=$total_runs"
 
-  if [[ "$total_runs" -eq 0 ]]; then
-    return 2 # required checks exist but none have started
+  if [[ "$total_required" -gt 0 ]]; then
+    [[ "$passed" -eq "$total_required" ]] && return 0 || return 1
   fi
 
-  return 1 # required checks exist and are pending
+  # Empty arrays case — could be no required checks OR required checks that never ran
+  if [[ "$total_required" -eq 0 && "$total_runs" -eq 0 ]]; then
+    echo "DEBUG: No statuses or check runs visible — probing mergeability..."
+    if gh pr merge "$pr_number" --squash --dry-run 2>&1 | grep -q "base branch policy prohibits the merge"; then
+      return 2 # required checks exist but none have started (PAT needed)
+    else
+      return 3 # no required checks configured
+    fi
+  fi
+
+  return 1
 }
 
 # --- Decide which token to use ---
