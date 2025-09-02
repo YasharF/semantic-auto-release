@@ -49,7 +49,7 @@
     "test:unit": "mocha --require sinon --recursive \"test/*.test.js\" --exclude \"test/*.integration.test.js\""
   },
   "lint-staged": {
-    "**/*.{js,yml,md}": "prettier --check",
+    "**/*.{js,yml,md,sh}": "prettier --check",
     ".github/*": "prettier --check"
   },
   "dependencies": {

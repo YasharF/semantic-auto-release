@@ -4,6 +4,61 @@ set -euo pipefail
 : "${CHANGELOG_FILE:?CHANGELOG_FILE env var is required}"
 : "${RUN_PRETTIER_ON_CHANGELOG:?RUN_PRETTIER_ON_CHANGELOG env var is required}"
 
+REPO="${GITHUB_REPOSITORY}"
+
+# --- Function: check_required_checks_status ---
+# Arguments: $1 = repo (owner/name), $2 = PR number
+# Returns: 0 if all required checks passed
+#          1 if required checks exist but are pending
+#          2 if required checks exist but none have started
+#          3 if no required checks configured
+check_required_checks_status() {
+  local repo="$1"
+  local pr_number="$2"
+
+  # Get the latest commit SHA for this PR
+  local head_sha
+  head_sha=$(gh pr view "$pr_number" --repo "$repo" --json headRefOid --jq '.headRefOid') || return 3
+
+  # Fetch combined status + check runs for that commit
+  local status_json checks_json
+  status_json=$(gh api repos/"$repo"/commits/"$head_sha"/status) || return 3
+  checks_json=$(gh api repos/"$repo"/commits/"$head_sha"/check-runs) || return 3
+
+  # Count required contexts from combined status
+  local total_required
+  total_required=$(echo "$status_json" | jq '[.statuses[] | select(.context != null)] | length')
+  if [[ "$total_required" -eq 0 ]]; then
+    return 3 # no required checks configured
+  fi
+
+  local passed
+  passed=$(echo "$status_json" | jq '[.statuses[] | select(.state == "success")] | length')
+  if [[ "$passed" -eq "$total_required" ]]; then
+    return 0 # all passed
+  fi
+
+  # See if any check runs exist at all
+  local total_runs
+  total_runs=$(echo "$checks_json" | jq '.total_count')
+  if [[ "$total_runs" -eq 0 ]]; then
+    return 2 # required checks exist but none have started
+  fi
+
+  return 1 # required checks exist and are pending
+}
+
+# --- Decide which token to use ---
+if [[ -n "${RELEASE_PAT:-}" ]]; then
+  echo "PAT provided. Using PAT for GitHub CLI and API calls."
+  export GH_TOKEN="$RELEASE_PAT"
+  USING_PAT=true
+else
+  echo "No PAT provided. Using the Actions-provided GITHUB_TOKEN."
+  export GH_TOKEN="$GITHUB_TOKEN"
+  USING_PAT=false
+fi
+
 # --- Run semantic-release to export version, notes, and branch ---
 export release_step=create_release_files
 npx semantic-release --no-ci --dry-run --extends ./release.config.js
@@ -14,68 +69,6 @@ DEFAULT_BRANCH=$(cat branch.txt) # authoritative from plugin for versioning
 if [[ -z "$VERSION" ]]; then
   echo "No release necessary."
   exit 0
-fi
-
-# --- Function to check if PAT is valid ---
-check_pat_valid() {
-  local token="$1"
-  local login
-  login=$(curl -s -H "Authorization: Bearer ${token}" https://api.github.com/user | jq -r .login)
-  [[ "$login" != "null" && -n "$login" ]]
-}
-
-# --- Decide which token to use ---
-if [[ -n "${RELEASE_PAT:-}" ]]; then
-  if check_pat_valid "$RELEASE_PAT"; then
-    echo "PAT provided and is valid. Using PAT for GitHub CLI and API calls."
-    export GH_TOKEN="$RELEASE_PAT"
-    USING_PAT=true
-  else
-    echo "WARNING: Provided PAT is invalid. Falling back to the Actions-provided GITHUB_TOKEN."
-    export GH_TOKEN="$GITHUB_TOKEN"
-    USING_PAT=false
-  fi
-else
-  echo "No PAT provided. Using the Actions-provided GITHUB_TOKEN."
-  export GH_TOKEN="$GITHUB_TOKEN"
-  USING_PAT=false
-fi
-
-# --- Check branch protection for required status checks ---
-
-echo "DEBUG: Fetching branch protection info for ${GITHUB_REPOSITORY} / ${DEFAULT_BRANCH}..."
-raw_protection_json=$(curl -s -w "\nHTTP_STATUS:%{http_code}\n" \
-  -H "Authorization: Bearer ${GITHUB_TOKEN}" \
-  "https://api.github.com/repos/${GITHUB_REPOSITORY}/branches/${DEFAULT_BRANCH}/protection")
-
-# Split out the HTTP status and body
-http_status=$(echo "$raw_protection_json" | sed -n 's/^HTTP_STATUS://p')
-response_body=$(echo "$raw_protection_json" | sed '/^HTTP_STATUS:/d')
-
-echo "DEBUG: HTTP status: $http_status"
-echo "DEBUG: Raw response body:"
-echo "$response_body"
-
-# Now run jq on the body
-REQUIRED_CHECKS=$(echo "$response_body" | jq -r '.required_status_checks.contexts | @csv' 2> /dev/null || echo "")
-echo "DEBUG: REQUIRED_CHECKS parsed as: '$REQUIRED_CHECKS'"
-
-# REQUIRED_CHECKS=$(curl -s -H "Authorization: Bearer ${GITHUB_TOKEN}" \
-#   "https://api.github.com/repos/${GITHUB_REPOSITORY}/branches/${DEFAULT_BRANCH}/protection" \
-#   | jq -r '.required_status_checks.contexts | @csv' 2> /dev/null || echo "")
-
-echo "$GITHUB_REPOSITORY"
-echo "$DEFAULT_BRANCH"
-echo "$REQUIRED_CHECKS"
-
-if [[ "$USING_PAT" == false && -n "$REQUIRED_CHECKS" && "$REQUIRED_CHECKS" != "null" ]]; then
-  echo "ERROR: Default branch '${DEFAULT_BRANCH}' has required status checks (other workflows): $REQUIRED_CHECKS"
-  echo "Pull requests opened by workflows using only the Actions-provided GITHUB_TOKEN will not trigger those workflow runs, which will block the merge."
-  echo "To merge the updated changelog and package.json (version bump), this workflow must open a pull request that triggers and passes the required checks."
-  echo "Add a Fine-grained GitHub Personal Access Token (PAT) with [ Contents: Read & write, Pull requests: Read & write ] permissions for the repo as a secret named RELEASE_PAT in your repository settings on GitHub."
-  exit 1
-else
-  echo "No required checks for a pull request merge."
 fi
 
 # --- Record the base SHA of the default branch before we start ---
@@ -112,18 +105,12 @@ git commit -m "chore(release): ${VERSION}" || true
 echo "=== Pushing ephemeral branch ==="
 git push origin "$TEMP_BRANCH" --force
 
-# --- Build PR body with maintainer guidance ---
+# --- Create PR ---
 PR_BODY=$(
   cat << EOF
 Automated release PR for version ${VERSION} (changelog + package.json version bump).
 
 This pull request was created by the semantic-auto-release workflow.
-
-If this PR fails to merge automatically:
-- Troubleshoot and resolve the issue.
-- Once the blocking issue is resolved, you can either:
-  - Merge this PR, create, and publish a new version manually **or**
-  - Close this PR and delete the branch \`${TEMP_BRANCH}\`, then re-run the workflow to restart the auto-release process.
 EOF
 )
 
@@ -137,31 +124,47 @@ echo "$PR_URL"
 
 PR_NUMBER=$(gh pr view "$PR_URL" --json number --jq '.number')
 
-# --- If using a valid PAT and required checks exist, retry merge until it works ---
-if [[ "$USING_PAT" == true && -n "$REQUIRED_CHECKS" && "$REQUIRED_CHECKS" != "null" ]]; then
-  echo "=== Waiting for required checks by retrying merge for PR #$PR_NUMBER ==="
-  max_attempts=40 # ~10 minutes if sleep=15
-  attempt=1
-  merged=false
-  while ((attempt <= max_attempts)); do
-    if gh pr merge "$PR_NUMBER" --squash; then
-      echo "Merge succeeded on attempt $attempt."
-      merged=true
-      break
-    else
-      echo "Merge attempt $attempt failed — likely waiting on required checks. Retrying in 15s..."
+# --- Merge logic with required checks detection ---
+status_code=3
+check_required_checks_status "$REPO" "$PR_NUMBER" || status_code=$?
+
+case $status_code in
+  0)
+    echo "All required checks passed — proceeding to merge."
+    ;;
+  1)
+    echo "Required checks are still pending — waiting for them to pass..."
+    max_attempts=40 # ~10 minutes if sleep=15
+    attempt=1
+    while ((attempt <= max_attempts)); do
       sleep 15
+      check_required_checks_status "$REPO" "$PR_NUMBER" || status_code=$?
+      if [[ $status_code -eq 0 ]]; then
+        echo "All required checks passed on attempt $attempt."
+        break
+      fi
+      echo "Attempt $attempt: checks still pending..."
+      ((attempt++))
+    done
+    if [[ $status_code -ne 0 ]]; then
+      echo "ERROR: Required checks did not pass within the timeout."
+      exit 1
     fi
-    ((attempt++))
-  done
-  if [[ "$merged" != true ]]; then
-    echo "ERROR: Could not merge PR #$PR_NUMBER after $max_attempts attempts."
+    ;;
+  2)
+    echo "ERROR: Required checks exist but none have started."
+    echo "This usually happens when the PR was created with the default GITHUB_TOKEN"
+    echo "and the repo has required status checks from other workflows."
+    echo "Use a fine-grained PAT with 'Contents: Read & write' and 'Pull requests: Read & write' to create the PR."
     exit 1
-  fi
-else
-  echo "=== Merging PR ==="
-  gh pr merge "$PR_NUMBER" --squash
-fi
+    ;;
+  3)
+    echo "No required checks configured — proceeding."
+    ;;
+esac
+
+echo "=== Merging PR ==="
+gh pr merge "$PR_NUMBER" --squash
 
 echo "=== Syncing $DEFAULT_BRANCH branch after merge ==="
 git fetch origin "$DEFAULT_BRANCH"
