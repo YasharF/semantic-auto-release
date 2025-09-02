@@ -1,3 +1,13 @@
+## 1.3.5 - 2025-09-02
+
+## [1.3.5](https://github.com/YasharF/semantic-auto-release/compare/v1.3.4...v1.3.5) (2025-09-02)
+
+
+### Bug Fixes
+
+* edit doc just to have a release for testing ([f8bcc7a](https://github.com/YasharF/semantic-auto-release/commit/f8bcc7a89c7e8812a3bbb876d29b3c5821da8eee))
+* improved logging ([3d30cba](https://github.com/YasharF/semantic-auto-release/commit/3d30cbab6b22cd42bc4b56245e5ab9d409337e2a))
+
 ## 1.3.4 - 2025-09-02
 
 ## [1.3.4](https://github.com/YasharF/semantic-auto-release/compare/v1.3.3...v1.3.4) (2025-09-02)
