@@ -23,33 +23,40 @@ check_required_checks_status() {
   head_sha=$(gh pr view "$pr_number" --repo "$repo" --json headRefOid --jq '.headRefOid') || return 3
   echo "DEBUG: head_sha=$head_sha"
 
-  # Retry loop to wait for check runs to appear
-  local checks_json total_runs attempt=1 max_attempts=5
+  # List of required check names — add all that are marked "Required" in branch protection
+  local required_checks=(
+    "Tests / static-and-unit-tests"
+    # Add more required check names here if needed
+  )
+  local total_required=${#required_checks[@]}
+  if [[ "$total_required" -eq 0 ]]; then
+    echo "DEBUG: No required checks configured in script."
+    return 3
+  fi
+
+  # Retry loop to wait for ALL required checks to appear in /check-runs
+  local checks_json attempt=1 max_attempts=10
   while ((attempt <= max_attempts)); do
     checks_json=$(gh api repos/"$repo"/commits/"$head_sha"/check-runs) || return 3
-    total_runs=$(echo "$checks_json" | jq '.total_count')
-    echo "DEBUG: Attempt $attempt — total_runs=$total_runs"
-    if [[ "$total_runs" -gt 0 ]]; then
+    local found_all=true
+    for check_name in "${required_checks[@]}"; do
+      local count
+      count=$(echo "$checks_json" | jq --arg name "$check_name" '[.check_runs[] | select(.name==$name)] | length')
+      if [[ "$count" -eq 0 ]]; then
+        found_all=false
+        break
+      fi
+    done
+    if $found_all; then
       break
     fi
+    echo "DEBUG: Attempt $attempt — not all required checks found yet, retrying..."
     sleep 3
     ((attempt++))
   done
 
   echo "DEBUG: Final check runs JSON after $attempt attempt(s):"
   echo "$checks_json" | jq .
-
-  # List of required check names — add all that are marked "Required" in branch protection
-  local required_checks=(
-    "Tests / static-and-unit-tests"
-    # Add more required check names here if needed
-  )
-
-  local total_required=${#required_checks[@]}
-  if [[ "$total_required" -eq 0 ]]; then
-    echo "DEBUG: No required checks configured in script."
-    return 3
-  fi
 
   local passed_count=0
   local pending_count=0
@@ -58,37 +65,20 @@ check_required_checks_status() {
   for check_name in "${required_checks[@]}"; do
     local check_json
     check_json=$(echo "$checks_json" | jq --arg name "$check_name" '.check_runs | map(select(.name==$name))')
-    local count
-    count=$(echo "$check_json" | jq 'length')
-    if [[ "$count" -eq 0 ]]; then
-      echo "DEBUG: Required check '$check_name' not found in check runs."
-      # Fallback to mergeStateStatus to decide between PAT needed vs no required checks
-      local merge_state
-      merge_state=$(gh pr view "$pr_number" --repo "$repo" --json mergeStateStatus --jq '.mergeStateStatus')
-      echo "DEBUG: mergeStateStatus=$merge_state"
-      if [[ "${merge_state^^}" == "BLOCKED" ]]; then
-        return 2
-      else
-        return 3
-      fi
-    fi
-
     local ok_count
     ok_count=$(echo "$check_json" | jq '[.[] | select(.status=="completed" and (.conclusion=="success" or .conclusion=="skipped" or .conclusion=="neutral"))] | length')
-    if [[ "$ok_count" -eq "$count" ]]; then
+    local total_count
+    total_count=$(echo "$check_json" | jq 'length')
+
+    if [[ "$ok_count" -eq "$total_count" && "$total_count" -gt 0 ]]; then
       ((passed_count++))
     else
-      local pending_or_failed
-      pending_or_failed=$(echo "$check_json" | jq '[.[] | select(.status!="completed" or (.conclusion!="success" and .conclusion!="skipped" and .conclusion!="neutral"))] | length')
-      if [[ "$pending_or_failed" -gt 0 ]]; then
-        # Distinguish pending vs failed
-        local failed_here
-        failed_here=$(echo "$check_json" | jq '[.[] | select(.status=="completed" and (.conclusion=="failure" or .conclusion=="timed_out" or .conclusion=="cancelled" or .conclusion=="action_required"))] | length')
-        if [[ "$failed_here" -gt 0 ]]; then
-          ((failed_count++))
-        else
-          ((pending_count++))
-        fi
+      local failed_here
+      failed_here=$(echo "$check_json" | jq '[.[] | select(.status=="completed" and (.conclusion=="failure" or .conclusion=="timed_out" or .conclusion=="cancelled" or .conclusion=="action_required"))] | length')
+      if [[ "$failed_here" -gt 0 ]]; then
+        ((failed_count++))
+      else
+        ((pending_count++))
       fi
     fi
   done
@@ -102,7 +92,15 @@ check_required_checks_status() {
   elif [[ "$failed_count" -gt 0 ]]; then
     return 1
   else
-    return 3
+    # If we still somehow didn't find them but mergeStateStatus says BLOCKED, treat as PAT needed
+    local merge_state
+    merge_state=$(gh pr view "$pr_number" --repo "$repo" --json mergeStateStatus --jq '.mergeStateStatus')
+    echo "DEBUG: mergeStateStatus=$merge_state"
+    if [[ "${merge_state^^}" == "BLOCKED" ]]; then
+      return 2
+    else
+      return 3
+    fi
   fi
 }
 
