@@ -19,7 +19,12 @@ else
 fi
 
 # --- Function: poll all checks until pass/fail/timeout ---
-# Returns: 0 = all success, 1 = fail, 2 = stuck after timeout, 3 = no checks observed
+# Returns:
+#   0 = all success
+#   1 = fail
+#   2 = stuck after timeout
+#   3 = no checks observed (array, but empty)
+#   4 = PAT provided, no branch protection (never saw an array)
 poll_checks() {
   local repo="$1" pr_number="$2"
   local head_sha
@@ -27,6 +32,8 @@ poll_checks() {
   echo "Head SHA: $head_sha"
 
   local attempt=1 max_attempts=10
+  local all_not_array=true
+
   while ((attempt <= max_attempts)); do
     echo "----------------"
     if [[ -z "$head_sha" ]]; then
@@ -44,14 +51,24 @@ poll_checks() {
     local checks_json
     checks_json=$(gh api "/repos/$repo/commits/$head_sha/check-runs" --jq '.check_runs' 2> /dev/null || echo "[]")
 
+    # Detect if this payload is not an array
+    if ! echo "$checks_json" | jq -e 'type=="array"' > /dev/null 2>&1; then
+      checks_json="[]"
+    else
+      all_not_array=false
+    fi
+
     local count
     count=$(echo "$checks_json" | jq 'length')
     echo "Found $count check(s)"
     if [[ "$count" -eq 0 ]]; then
       echo "Attempt $attempt/$max_attempts: No checks found yet."
       if ((attempt == max_attempts)); then
-        echo "INFO: No checks were detected within the wait window."
-        return 3
+        if $all_not_array; then
+          return 4 # PAT provided, no branch protection
+        else
+          return 3 # no checks observed, but array type was seen
+        fi
       fi
       sleep 30
       ((attempt++))
@@ -185,6 +202,7 @@ else
     0) ;;                        # all good
     1 | 2) exit 1 ;;             # fail or stuck
     3) CHECKS_UNOBSERVED=true ;; # no checks found — proceed but warn
+    4) ;;                        # PAT provided, no branch protection, all else good
     *) exit 1 ;;
   esac
 fi
