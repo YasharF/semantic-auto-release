@@ -5,6 +5,19 @@ set -euo pipefail
 : "${RUN_PRETTIER_ON_CHANGELOG:?RUN_PRETTIER_ON_CHANGELOG env var is required}"
 
 REPO="${GITHUB_REPOSITORY}"
+export SAVED_TOKEN="$GITHUB_TOKEN"
+
+# --- Token selection ---
+if [[ -n "${RELEASE_PAT:-}" ]]; then
+  echo "PAT provided. Using PAT for GitHub CLI and API calls."
+  export GITHUB_TOKEN="$RELEASE_PAT"
+  export GH_TOKEN="$RELEASE_PAT"
+  USING_PAT=true
+else
+  echo "No PAT provided. Using the Actions-provided GITHUB_TOKEN."
+  export GH_TOKEN="$GITHUB_TOKEN"
+  USING_PAT=false
+fi
 
 # --- Function: poll all checks until pass/fail/timeout ---
 # Returns:
@@ -180,6 +193,7 @@ PR_URL=$(gh pr create \
 
 PR_NUMBER=$(gh pr view "$PR_URL" --json number --jq '.number')
 
+export GITHUB_TOKEN="$RELEASE_PAT"
 export GH_TOKEN="$RELEASE_PAT"
 set +e
 bp_api_out=$(gh api "/repos/$GITHUB_REPOSITORY/branches/$DEFAULT_BRANCH/protection" 2> /dev/null)
@@ -187,19 +201,6 @@ rc=$?
 set -e
 echo "Branch protection check call status: $rc"
 echo "Branch protection check: $bp_api_out"
-
-# --- Token selection ---
-if [[ -n "${RELEASE_PAT:-}" ]]; then
-  echo "PAT provided. Using PAT for GitHub CLI and API calls."
-  #  export GITHUB_TOKEN="$RELEASE_PAT"
-  #  export GH_TOKEN="$RELEASE_PAT"
-  export GH_TOKEN="$GITHUB_TOKEN"
-  USING_PAT=true
-else
-  echo "No PAT provided. Using the Actions-provided GITHUB_TOKEN."
-  export GH_TOKEN="$GITHUB_TOKEN"
-  USING_PAT=false
-fi
 
 echo "Waiting for 30 seconds for GitHub to setup the pull request."
 sleep 30 # Give GitHub a moment to register the PR and any associated checks
