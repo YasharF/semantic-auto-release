@@ -51,6 +51,8 @@ poll_checks() {
     local checks_json
     checks_json=$(gh api "/repos/$repo/commits/$head_sha/check-runs" --jq '.check_runs' 2> /dev/null || echo "[]")
 
+    echo "$checks_json"
+
     # Detect if this payload is not an array
     if ! echo "$checks_json" | jq -e 'type=="array"' > /dev/null 2>&1; then
       checks_json="[]"
