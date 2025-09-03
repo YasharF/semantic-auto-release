@@ -23,8 +23,8 @@ fi
 #   0 = all success
 #   1 = fail
 #   2 = stuck after timeout
-#   3 = no checks observed (array, but empty)
-#   4 = PAT provided, no branch protection (never saw an array)
+#   3 = no checks observed (endpoint responded with a valid array, but it was empty throughout)
+#   4 = PAT provided, no branch protection (endpoint never returned a valid array; e.g., 403/no access to checks)
 poll_checks() {
   local repo="$1" pr_number="$2"
   local head_sha
@@ -32,12 +32,11 @@ poll_checks() {
   echo "Head SHA: $head_sha"
 
   local attempt=1 max_attempts=10
-  local all_not_array=true
-
-  https://api.github.com/repos/
+  local saw_valid_array=false
 
   while ((attempt <= max_attempts)); do
     echo "----------------"
+
     if [[ -z "$head_sha" ]]; then
       echo "Attempt $attempt/$max_attempts: Could not get head SHA yet."
       if ((attempt == max_attempts)); then
@@ -50,29 +49,35 @@ poll_checks() {
       continue
     fi
 
-    local checks_json
-    checks_json=$(gh api "/repos/$repo/commits/$head_sha/check-runs" --jq '.check_runs' 2> /dev/null || echo "[]")
+    # Call the checks endpoint; do not let a non-zero exit abort the script
+    local api_out rc
+    set +e
+    api_out=$(gh api "/repos/$repo/commits/$head_sha/check-runs" 2> /dev/null)
+    rc=$?
+    set -e
 
-    echo "pre payload detection:$checks_json"
-
-    # Detect if this payload is not an array
-    if ! echo "$checks_json" | jq -e 'type=="array"' > /dev/null 2>&1; then
-      checks_json="[]"
-    else
-      all_not_array=false
+    local checks_json="[]"
+    if ((rc == 0)); then
+      # Parse out check_runs as an array (fallback to [] if missing)
+      checks_json=$(echo "$api_out" | jq -c '.check_runs // []' 2> /dev/null || echo "[]")
+      # Confirm we truly have an array from the API response
+      if echo "$checks_json" | jq -e 'type=="array"' > /dev/null 2>&1; then
+        saw_valid_array=true
+      else
+        checks_json="[]"
+      fi
     fi
 
-    echo "post payload detection:$checks_json"
     local count
     count=$(echo "$checks_json" | jq 'length')
     echo "Found $count check(s)"
     if [[ "$count" -eq 0 ]]; then
       echo "Attempt $attempt/$max_attempts: No checks found yet."
       if ((attempt == max_attempts)); then
-        if $all_not_array; then
-          return 4 # PAT provided, no branch protection
+        if ! $saw_valid_array; then
+          return 4 # PAT provided, no branch protection (never saw a valid array from the endpoint)
         else
-          return 3 # no checks observed, but array type was seen
+          return 3 # No checks observed despite valid array responses
         fi
       fi
       sleep 30
@@ -190,6 +195,13 @@ PR_NUMBER=$(gh pr view "$PR_URL" --json number --jq '.number')
 echo "Waiting for 30 seconds for GitHub to setup the pull request."
 sleep 30 # Give GitHub a moment to register the PR and any associated checks
 
+if gh api -H "Accept: application/vnd.github+json" \
+  "/repos/$GITHUB_REPOSITORY/branches/$DEFAULT_BRANCH/protection" > /dev/null 2>&1; then
+  echo "Branch protection is enabled"
+else
+  echo "Branch protection is disabled"
+fi
+
 # --- Merge logic ---
 CHECKS_UNOBSERVED=false
 if ! $USING_PAT; then
@@ -205,9 +217,9 @@ else
   set -e
   case "$rc" in
     0) ;;                        # all good
-    1 | 2) exit 1 ;;             # fail or stuck
+    1 | 2) exit 1 ;;             # fail or stuck (printed already)
     3) CHECKS_UNOBSERVED=true ;; # no checks found — proceed but warn
-    4) ;;                        # PAT provided, no branch protection, all else good
+    4) ;;                        # all good. PAT provided, no branch protection
     *) exit 1 ;;
   esac
 fi
