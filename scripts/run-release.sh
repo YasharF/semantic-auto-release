@@ -6,18 +6,6 @@ set -euo pipefail
 
 REPO="${GITHUB_REPOSITORY}"
 
-# --- Token selection ---
-if [[ -n "${RELEASE_PAT:-}" ]]; then
-  echo "PAT provided. Using PAT for GitHub CLI and API calls."
-  export GITHUB_TOKEN="$RELEASE_PAT"
-  export GH_TOKEN="$RELEASE_PAT"
-  USING_PAT=true
-else
-  echo "No PAT provided. Using the Actions-provided GITHUB_TOKEN."
-  export GH_TOKEN="$GITHUB_TOKEN"
-  USING_PAT=false
-fi
-
 # --- Function: poll all checks until pass/fail/timeout ---
 # Returns:
 #   0 = all success
@@ -201,6 +189,19 @@ rc=$?
 set -e
 echo "Branch protection check call status: $rc"
 echo "Branch protection check: $bp_api_out"
+
+# --- Token selection ---
+if [[ -n "${RELEASE_PAT:-}" ]]; then
+  echo "PAT provided. Using PAT for GitHub CLI and API calls."
+  #  export GITHUB_TOKEN="$RELEASE_PAT"
+  #  export GH_TOKEN="$RELEASE_PAT"
+  export GH_TOKEN="$GITHUB_TOKEN"
+  USING_PAT=true
+else
+  echo "No PAT provided. Using the Actions-provided GITHUB_TOKEN."
+  export GH_TOKEN="$GITHUB_TOKEN"
+  USING_PAT=false
+fi
 
 # --- Merge logic ---
 CHECKS_UNOBSERVED=false
