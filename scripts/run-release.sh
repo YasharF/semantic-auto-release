@@ -195,12 +195,8 @@ PR_NUMBER=$(gh pr view "$PR_URL" --json number --jq '.number')
 echo "Waiting for 30 seconds for GitHub to setup the pull request."
 sleep 30 # Give GitHub a moment to register the PR and any associated checks
 
-if gh api -H "Accept: application/vnd.github+json" \
-  "/repos/$GITHUB_REPOSITORY/branches/$DEFAULT_BRANCH/protection" > /dev/null 2>&1; then
-  echo "Branch protection is enabled"
-else
-  echo "Branch protection is disabled"
-fi
+api_out=$(gh api "/repos/$GITHUB_REPOSITORY/branches/$DEFAULT_BRANCH/protection" 2> /dev/null)
+echo "Branch protection check: $api_out"
 
 # --- Merge logic ---
 CHECKS_UNOBSERVED=false
