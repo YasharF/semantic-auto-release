@@ -180,9 +180,7 @@ PR_URL=$(gh pr create \
 
 PR_NUMBER=$(gh pr view "$PR_URL" --json number --jq '.number')
 
-echo "Waiting for 30 seconds for GitHub to setup the pull request."
-sleep 30 # Give GitHub a moment to register the PR and any associated checks
-
+export GH_TOKEN="$RELEASE_PAT"
 set +e
 bp_api_out=$(gh api "/repos/$GITHUB_REPOSITORY/branches/$DEFAULT_BRANCH/protection" 2> /dev/null)
 rc=$?
@@ -202,6 +200,9 @@ else
   export GH_TOKEN="$GITHUB_TOKEN"
   USING_PAT=false
 fi
+
+echo "Waiting for 30 seconds for GitHub to setup the pull request."
+sleep 30 # Give GitHub a moment to register the PR and any associated checks
 
 # --- Merge logic ---
 CHECKS_UNOBSERVED=false
