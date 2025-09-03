@@ -34,6 +34,8 @@ poll_checks() {
   local attempt=1 max_attempts=10
   local all_not_array=true
 
+  https://api.github.com/repos/
+
   while ((attempt <= max_attempts)); do
     echo "----------------"
     if [[ -z "$head_sha" ]]; then
@@ -51,7 +53,7 @@ poll_checks() {
     local checks_json
     checks_json=$(gh api "/repos/$repo/commits/$head_sha/check-runs" --jq '.check_runs' 2> /dev/null || echo "[]")
 
-    echo "$checks_json"
+    echo "pre payload detection:$checks_json"
 
     # Detect if this payload is not an array
     if ! echo "$checks_json" | jq -e 'type=="array"' > /dev/null 2>&1; then
@@ -60,6 +62,7 @@ poll_checks() {
       all_not_array=false
     fi
 
+    echo "post payload detection:$checks_json"
     local count
     count=$(echo "$checks_json" | jq 'length')
     echo "Found $count check(s)"
