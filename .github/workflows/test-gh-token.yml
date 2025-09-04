@@ -1,0 +1,29 @@
+name: Test GH_TOKEN Permissions
+
+on:
+  workflow_dispatch: # manual trigger
+
+jobs:
+  gather-data:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+      # admin: write   # uncomment if you want to test admin-level GH_TOKEN
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Run data gathering script with GH_TOKEN
+        env:
+          REPO_OWNER: ${{ github.repository_owner }}
+          REPO_NAME: ${{ github.event.repository.name }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # Leave PAT_* unset here to ensure only GH_TOKEN is tested
+        run: |
+          node path/to/your/script.js

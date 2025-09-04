@@ -196,3 +196,5 @@ If you prefer not to use the setup script or it fails for some reason, you can c
 ## License
 
 Released under [BSD-3](LICENSE).
+
+---
