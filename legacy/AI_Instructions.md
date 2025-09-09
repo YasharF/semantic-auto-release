@@ -117,3 +117,14 @@ We may have a **GitHub Personal Access Token (PAT)**:
 - For data gathering, PATs with various access levels will be provided.
 - All code must be **self-contained** and **ready to run** in a GitHub Actions or local Node.js environment.
 - Scripts must detect whether they are running locally or in CI and select the appropriate token automatically.
+
+# (Deprecated) AI Instructions
+
+This document has been superseded by:
+
+- `docs/PRODUCT_REQUIREMENTS.md`
+- `docs/ARCHITECTURE.md`
+- `docs/AI_COLLABORATION.md`
+- `docs/DATA_FIXTURES.md`
+
+Retained temporarily for historical context. New contributions should reference the updated documents.

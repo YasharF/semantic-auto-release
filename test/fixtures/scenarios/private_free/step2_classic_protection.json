@@ -1,0 +1,65 @@
+{
+  "GH_TOKEN_ADMIN": {
+    "endpoint": "https://api.github.com/repos/YasharF/semantic-auto-release/branches/main/protection",
+    "status_code": 403,
+    "ok": false,
+    "data": {
+      "message": "Resource not accessible by integration",
+      "documentation_url": "https://docs.github.com/rest/branches/branch-protection#get-branch-protection",
+      "status": "403"
+    }
+  },
+  "GH_TOKEN": {
+    "endpoint": "https://api.github.com/repos/YasharF/semantic-auto-release/branches/main/protection",
+    "status_code": 403,
+    "ok": false,
+    "data": {
+      "message": "Resource not accessible by integration",
+      "documentation_url": "https://docs.github.com/rest/branches/branch-protection#get-branch-protection",
+      "status": "403"
+    }
+  },
+  "PAT_ADMIN": {
+    "endpoint": "https://api.github.com/repos/YasharF/semantic-auto-release/branches/main/protection",
+    "status_code": 403,
+    "ok": false,
+    "data": {
+      "message": "Upgrade to GitHub Pro or make this repository public to enable this feature.",
+      "documentation_url": "https://docs.github.com/rest/branches/branch-protection#get-branch-protection",
+      "status": "403"
+    }
+  },
+  "PAT_CONTENT_PR_STATUS": {
+    "endpoint": "https://api.github.com/repos/YasharF/semantic-auto-release/branches/main/protection",
+    "status_code": 403,
+    "ok": false,
+    "data": {
+      "message": "Resource not accessible by personal access token",
+      "documentation_url": "https://docs.github.com/rest/branches/branch-protection#get-branch-protection",
+      "status": "403"
+    }
+  },
+  "PAT_CONTENT_PR": {
+    "endpoint": "https://api.github.com/repos/YasharF/semantic-auto-release/branches/main/protection",
+    "status_code": 403,
+    "ok": false,
+    "data": {
+      "message": "Resource not accessible by personal access token",
+      "documentation_url": "https://docs.github.com/rest/branches/branch-protection#get-branch-protection",
+      "status": "403"
+    }
+  },
+  "PAT_MIN": {
+    "endpoint": "https://api.github.com/repos/YasharF/semantic-auto-release/branches/main/protection",
+    "status_code": 403,
+    "ok": false,
+    "data": {
+      "message": "Resource not accessible by personal access token",
+      "documentation_url": "https://docs.github.com/rest/branches/branch-protection#get-branch-protection",
+      "status": "403"
+    }
+  },
+  "PAT_BAD": {
+    "skipped": true
+  }
+}
