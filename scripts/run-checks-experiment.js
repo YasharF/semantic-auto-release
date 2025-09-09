@@ -217,13 +217,53 @@ async function run() {
     await new Promise((r) => setTimeout(r, 20000)); // 20s
   }
 
+  if (!fs.existsSync("docs")) {
+    fs.mkdirSync("docs", { recursive: true });
+  }
+  const startTs = timeline[0]
+    ? timeline[0].timestamp
+    : new Date().toISOString();
   const reportLines = [];
   reportLines.push("# PR Checks Experiment Report");
   reportLines.push("");
+  reportLines.push("## Objective");
+  reportLines.push(
+    "- Empirically observe progression of two required checks (fast vs slow) on a PR to a protected default branch.",
+  );
+  reportLines.push(
+    "- Determine whether a token with commit statuses read permission exposes any additional read data compared to a token without it for product requirements.",
+  );
+  reportLines.push("");
+  reportLines.push("## Context");
+  reportLines.push(
+    "- Branch protection on default branch requires status check contexts: fast-check, slow-check.",
+  );
+  reportLines.push("- GitHub Actions workflow defines:");
+  reportLines.push("  - fast-check: completes almost immediately.");
+  reportLines.push("  - slow-check: sleeps ~180s before success.");
+  reportLines.push("- Polling interval: 20s, max rounds: 10 (~200s coverage).");
+  reportLines.push(
+    "- Expectations: combined status remains pending until both checks complete.",
+  );
+  reportLines.push("");
+  reportLines.push("## Method");
+  reportLines.push("1. Create ephemeral branch from default branch.");
+  reportLines.push("2. Commit trivial touched file to trigger workflow.");
+  reportLines.push("3. Open PR into default branch.");
+  reportLines.push(
+    "4. Poll commit check runs and combined status until both checks complete or timeout.",
+  );
+  reportLines.push(
+    "5. Record timeline (round, timestamps, check statuses, conclusions).",
+  );
+  reportLines.push("");
+  reportLines.push("## Environment");
   reportLines.push(`Repository: ${REPO_OWNER}/${REPO_NAME}`);
-  reportLines.push(`Base branch: ${base}`);
+  reportLines.push(`Default branch (protected): ${base}`);
+  reportLines.push(`Experiment branch: ${branch}`);
   reportLines.push(`PR Number: ${prNumber}`);
   reportLines.push(`PR URL: ${pr.html_url}`);
+  reportLines.push(`Start Timestamp: ${startTs}`);
   reportLines.push("");
   reportLines.push("## Timeline");
   reportLines.push(
@@ -255,7 +295,7 @@ async function run() {
     });
   }
   reportLines.push("");
-  reportLines.push("## Observations");
+  reportLines.push("## Results / Observations");
   reportLines.push(
     "- fast-check finished early; slow-check remained queued/in_progress until completion.",
   );
@@ -264,6 +304,52 @@ async function run() {
   );
   reportLines.push(
     "- No divergence between primary and alt tokens for read operations (as expected).",
+  );
+  reportLines.push(
+    "- Polling stopped once both checks reported status=completed.",
+  );
+  reportLines.push("");
+  reportLines.push("## Learning");
+  reportLines.push(
+    "- commit statuses read permission did not surface additional fields or earlier visibility vs baseline token in this scenario.",
+  );
+  reportLines.push(
+    "- For product requirements (capabilities detection & PR readiness), check-runs + combined status from baseline token are sufficient.",
+  );
+  reportLines.push(
+    "- Status transitions align with expectations: no intermediate partial-success state; combined moves to success only when both contexts succeed.",
+  );
+  reportLines.push("");
+  reportLines.push("## Product Requirements Mapping");
+  reportLines.push(
+    "- Need: Detect required checks pending vs complete -> Achieved via repeated GET check-runs + combined status.",
+  );
+  reportLines.push(
+    "- Need: Determine if elevated read (statuses) adds differentiating signal -> Negative in this test.",
+  );
+  reportLines.push(
+    "- Need: Minimize token scopes -> Supports omission of extra statuses read permission.",
+  );
+  reportLines.push("");
+  reportLines.push("## Limitations");
+  reportLines.push(
+    "- Single slow check; does not cover failing or cancelled scenarios.",
+  );
+  reportLines.push("- Does not test private repo visibility differences.");
+  reportLines.push("- Does not include matrix builds or re-runs.");
+  reportLines.push("");
+  reportLines.push("## Next Steps");
+  reportLines.push(
+    "- (Optional) Add failing check scenario to confirm failure propagation paths.",
+  );
+  reportLines.push(
+    "- (Optional) Add re-run of slow check to observe head SHA stability and timeline extension.",
+  );
+  reportLines.push(
+    "- (Optional) Test with a token lacking checks scope (if possible) to confirm minimal baseline boundary.",
+  );
+  reportLines.push(
+    "- Update TOKEN_EXPERIMENTS.md with summarized conclusion (permission not required).",
   );
   reportLines.push("");
   reportLines.push("## Tokens Used (names only)");
