@@ -283,3 +283,7 @@ Test Guidance
 ### PAT_CONTENT_PR_STATUS vs PAT_CONTENT_PR
 
 Current captured dataset shows no observable difference between these two tokens on the repository info fields tracked here. The only intended distinction is that PAT_CONTENT_PR_STATUS includes the GitHub fine‑grained "statuses" (read) permission, while PAT_CONTENT_PR does not. This permission does not affect any currently recorded endpoints, so they are treated as equivalent for capability evaluation.
+
+### Experiment: Required Checks Progression (PR Checks Report)
+
+See `EXPERIMENT_PR_CHECKS.md` for empirical timeline of two required checks (fast vs slow). Result: No additional observable data surfaced by the token with explicit statuses read permission beyond the baseline token; combined status transitioned only after both checks completed. Conclusion: statuses read permission is not required for current product capability set (PR readiness + protection feature detection).
