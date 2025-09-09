@@ -50,6 +50,6 @@ Alt: PAT_CONTENT_PR_STATUS
 ## Classic Protection Verification
 
 - Classic branch protection with required contexts fast-check & slow-check applied.
-- Experiment branch PR #? observed check runs via Checks API (see timeline above).
+- Experiment branch PR #143 observed check runs via Checks API (see timeline above). Evidence snapshot (head SHA 5905ece1b103a47a9191ee2874e3032047dab7eb): fast-check (success), slow-check (success), PR Title Check (failure).
 - Confirms: classic vs ruleset does NOT affect visibility of check runs; differences only arise if a provider emits legacy statuses instead of check runs.
 - Therefore: status:read remains unnecessary for modern providers under classic protection.
