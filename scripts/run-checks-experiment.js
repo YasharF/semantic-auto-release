@@ -164,10 +164,16 @@ async function run() {
     );
     process.exit(1);
   }
-  const repo = await getRepo(primaryToken);
-  const base = repo.default_branch;
+  const currentBase = execSync("git rev-parse --abbrev-ref HEAD")
+    .toString()
+    .trim();
+  const base = currentBase; // use active working branch (e.g. nextVer) so workflows & docs exist
   const branch = `exp-checks-${Date.now()}`;
   await createBranch(base, branch);
+  // Ensure docs dir exists on the new branch (inherits from base, but guard anyway)
+  if (!fs.existsSync("docs")) {
+    fs.mkdirSync("docs", { recursive: true });
+  }
   const pr = await createPR(primaryToken, base, branch);
   const prNumber = pr.number;
   let headSha = pr.head && pr.head.sha;
