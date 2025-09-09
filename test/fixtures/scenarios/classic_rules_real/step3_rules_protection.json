@@ -1,0 +1,112 @@
+{
+  "PAT_BAD": {
+    "endpoint": "https://api.github.com/repos/YasharF/semantic-auto-release/rules/branches/main",
+    "status_code": 401,
+    "ok": false,
+    "data": {
+      "message": "Bad credentials",
+      "documentation_url": "https://docs.github.com/rest",
+      "status": "401"
+    }
+  },
+  "PAT_ADMIN": {
+    "endpoint": "https://api.github.com/repos/YasharF/semantic-auto-release/rules/branches/main",
+    "status_code": 200,
+    "ok": true,
+    "data": [
+      {
+        "type": "required_status_checks",
+        "parameters": {
+          "strict_required_status_checks_policy": false,
+          "do_not_enforce_on_create": false,
+          "required_status_checks": [
+            {
+              "context": "build"
+            },
+            {
+              "context": "test"
+            }
+          ]
+        },
+        "ruleset_source_type": "Repository",
+        "ruleset_source": "YasharF/semantic-auto-release",
+        "ruleset_id": 7973985
+      }
+    ]
+  },
+  "PAT_CONTENT_PR_STATUS": {
+    "endpoint": "https://api.github.com/repos/YasharF/semantic-auto-release/rules/branches/main",
+    "status_code": 200,
+    "ok": true,
+    "data": [
+      {
+        "type": "required_status_checks",
+        "parameters": {
+          "strict_required_status_checks_policy": false,
+          "do_not_enforce_on_create": false,
+          "required_status_checks": [
+            {
+              "context": "build"
+            },
+            {
+              "context": "test"
+            }
+          ]
+        },
+        "ruleset_source_type": "Repository",
+        "ruleset_source": "YasharF/semantic-auto-release",
+        "ruleset_id": 7973985
+      }
+    ]
+  },
+  "PAT_CONTENT_PR": {
+    "endpoint": "https://api.github.com/repos/YasharF/semantic-auto-release/rules/branches/main",
+    "status_code": 200,
+    "ok": true,
+    "data": [
+      {
+        "type": "required_status_checks",
+        "parameters": {
+          "strict_required_status_checks_policy": false,
+          "do_not_enforce_on_create": false,
+          "required_status_checks": [
+            {
+              "context": "build"
+            },
+            {
+              "context": "test"
+            }
+          ]
+        },
+        "ruleset_source_type": "Repository",
+        "ruleset_source": "YasharF/semantic-auto-release",
+        "ruleset_id": 7973985
+      }
+    ]
+  },
+  "PAT_MIN": {
+    "endpoint": "https://api.github.com/repos/YasharF/semantic-auto-release/rules/branches/main",
+    "status_code": 200,
+    "ok": true,
+    "data": [
+      {
+        "type": "required_status_checks",
+        "parameters": {
+          "strict_required_status_checks_policy": false,
+          "do_not_enforce_on_create": false,
+          "required_status_checks": [
+            {
+              "context": "build"
+            },
+            {
+              "context": "test"
+            }
+          ]
+        },
+        "ruleset_source_type": "Repository",
+        "ruleset_source": "YasharF/semantic-auto-release",
+        "ruleset_id": 7973985
+      }
+    ]
+  }
+}

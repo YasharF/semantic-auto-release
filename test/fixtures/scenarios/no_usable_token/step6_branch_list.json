@@ -1,0 +1,3 @@
+{
+  "PAT_READONLY": { "endpoint": "https://api.github.com/repos/example/readonly/branches", "status_code": 403, "ok": false, "data": { "message": "Resource not accessible" } }
+}

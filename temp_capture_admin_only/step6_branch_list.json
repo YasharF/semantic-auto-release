@@ -1,0 +1,409 @@
+{
+  "PAT_ADMIN": {
+    "endpoint": "https://api.github.com/repos/YasharF/semantic-auto-release/branches?per_page=100",
+    "status_code": 200,
+    "ok": true,
+    "data": [
+      {
+        "name": "main",
+        "commit": {
+          "sha": "9697050784c5ed6dfa2311083148be8a055752c0",
+          "url": "https://api.github.com/repos/YasharF/semantic-auto-release/commits/9697050784c5ed6dfa2311083148be8a055752c0"
+        },
+        "protected": false
+      },
+      {
+        "name": "nextVer",
+        "commit": {
+          "sha": "3fb12cdfcbeac6a3d46c536f169c8b9a1f75d9f8",
+          "url": "https://api.github.com/repos/YasharF/semantic-auto-release/commits/3fb12cdfcbeac6a3d46c536f169c8b9a1f75d9f8"
+        },
+        "protected": false
+      },
+      {
+        "name": "temp_release_17387876584_1",
+        "commit": {
+          "sha": "a69abbb0a8adce6dea44fd22742fbdcb0d6d2c55",
+          "url": "https://api.github.com/repos/YasharF/semantic-auto-release/commits/a69abbb0a8adce6dea44fd22742fbdcb0d6d2c55"
+        },
+        "protected": false
+      },
+      {
+        "name": "temp_release_17390988266_3",
+        "commit": {
+          "sha": "6bcbbfa6a23de84021886864b85dd761e3a67387",
+          "url": "https://api.github.com/repos/YasharF/semantic-auto-release/commits/6bcbbfa6a23de84021886864b85dd761e3a67387"
+        },
+        "protected": false
+      },
+      {
+        "name": "temp_release_17391023655_4",
+        "commit": {
+          "sha": "f0d1398474bba69aa3785e8c37a4d2fed62395da",
+          "url": "https://api.github.com/repos/YasharF/semantic-auto-release/commits/f0d1398474bba69aa3785e8c37a4d2fed62395da"
+        },
+        "protected": false
+      },
+      {
+        "name": "temp_release_17391175651_5",
+        "commit": {
+          "sha": "87e25fa4b5201ed4f180d81b3653f1ecc250f4a2",
+          "url": "https://api.github.com/repos/YasharF/semantic-auto-release/commits/87e25fa4b5201ed4f180d81b3653f1ecc250f4a2"
+        },
+        "protected": false
+      },
+      {
+        "name": "temp_release_17391260617_6",
+        "commit": {
+          "sha": "85495f4748d85b9c07a82c07a867d4d7f4bfed54",
+          "url": "https://api.github.com/repos/YasharF/semantic-auto-release/commits/85495f4748d85b9c07a82c07a867d4d7f4bfed54"
+        },
+        "protected": false
+      },
+      {
+        "name": "temp_release_17391383520_7",
+        "commit": {
+          "sha": "e0a66ccf5cb4e06d24e32b91390195bcb1ce75ef",
+          "url": "https://api.github.com/repos/YasharF/semantic-auto-release/commits/e0a66ccf5cb4e06d24e32b91390195bcb1ce75ef"
+        },
+        "protected": false
+      },
+      {
+        "name": "temp_release_17392081787_11",
+        "commit": {
+          "sha": "0abe5ec2280449e519bcae2a821991160f90c698",
+          "url": "https://api.github.com/repos/YasharF/semantic-auto-release/commits/0abe5ec2280449e519bcae2a821991160f90c698"
+        },
+        "protected": false
+      },
+      {
+        "name": "temp_release_17392318094_12",
+        "commit": {
+          "sha": "5888b2fd6f15fb33f599903da9e60f48857e771f",
+          "url": "https://api.github.com/repos/YasharF/semantic-auto-release/commits/5888b2fd6f15fb33f599903da9e60f48857e771f"
+        },
+        "protected": false
+      },
+      {
+        "name": "temp_release_17392789142_13",
+        "commit": {
+          "sha": "7278a921a0a40ff1ae006f9e58e02b5c829ffaac",
+          "url": "https://api.github.com/repos/YasharF/semantic-auto-release/commits/7278a921a0a40ff1ae006f9e58e02b5c829ffaac"
+        },
+        "protected": false
+      },
+      {
+        "name": "temp_release_17392902592_14",
+        "commit": {
+          "sha": "8b7106fadf0459b8b0acfea25dff2c13a78ad260",
+          "url": "https://api.github.com/repos/YasharF/semantic-auto-release/commits/8b7106fadf0459b8b0acfea25dff2c13a78ad260"
+        },
+        "protected": false
+      },
+      {
+        "name": "temp_release_17393038757_15",
+        "commit": {
+          "sha": "bc23f89ab14d8bbbcbd0c97a930442e3fe250bce",
+          "url": "https://api.github.com/repos/YasharF/semantic-auto-release/commits/bc23f89ab14d8bbbcbd0c97a930442e3fe250bce"
+        },
+        "protected": false
+      },
+      {
+        "name": "temp_release_17393272845_16",
+        "commit": {
+          "sha": "c800a93bf52b50a7637a97bb0cbb45fdd4af1155",
+          "url": "https://api.github.com/repos/YasharF/semantic-auto-release/commits/c800a93bf52b50a7637a97bb0cbb45fdd4af1155"
+        },
+        "protected": false
+      },
+      {
+        "name": "temp_release_17393300132_17",
+        "commit": {
+          "sha": "8661c94f43051a74b97f3deea4a5abdb4e7f0ecc",
+          "url": "https://api.github.com/repos/YasharF/semantic-auto-release/commits/8661c94f43051a74b97f3deea4a5abdb4e7f0ecc"
+        },
+        "protected": false
+      },
+      {
+        "name": "temp_release_17393354597_18",
+        "commit": {
+          "sha": "619c2292e56ed0e0610eee81a448221f5e6de6a6",
+          "url": "https://api.github.com/repos/YasharF/semantic-auto-release/commits/619c2292e56ed0e0610eee81a448221f5e6de6a6"
+        },
+        "protected": false
+      },
+      {
+        "name": "temp_release_17393378048_19",
+        "commit": {
+          "sha": "019b4542ace0063e67eb81fac7eb27c2d36eb788",
+          "url": "https://api.github.com/repos/YasharF/semantic-auto-release/commits/019b4542ace0063e67eb81fac7eb27c2d36eb788"
+        },
+        "protected": false
+      },
+      {
+        "name": "temp_release_17393452295_20",
+        "commit": {
+          "sha": "1fa40aa5131cde8d680b6d390d780a7b29b1c933",
+          "url": "https://api.github.com/repos/YasharF/semantic-auto-release/commits/1fa40aa5131cde8d680b6d390d780a7b29b1c933"
+        },
+        "protected": false
+      },
+      {
+        "name": "temp_release_17393517114_21",
+        "commit": {
+          "sha": "efb1d067b6a96c33a11071f5be2580ff74f48918",
+          "url": "https://api.github.com/repos/YasharF/semantic-auto-release/commits/efb1d067b6a96c33a11071f5be2580ff74f48918"
+        },
+        "protected": false
+      },
+      {
+        "name": "temp_release_17393624206_22",
+        "commit": {
+          "sha": "da1817b684a9cf5d1e6ebf29b294ad9819c15623",
+          "url": "https://api.github.com/repos/YasharF/semantic-auto-release/commits/da1817b684a9cf5d1e6ebf29b294ad9819c15623"
+        },
+        "protected": false
+      },
+      {
+        "name": "temp_release_17393694059_23",
+        "commit": {
+          "sha": "7fa80b339f312947da2491b96bf82e22862adf91",
+          "url": "https://api.github.com/repos/YasharF/semantic-auto-release/commits/7fa80b339f312947da2491b96bf82e22862adf91"
+        },
+        "protected": false
+      },
+      {
+        "name": "temp_release_17394235182_24",
+        "commit": {
+          "sha": "ea2d1cef74b47f827337f2383350cbdb4315887f",
+          "url": "https://api.github.com/repos/YasharF/semantic-auto-release/commits/ea2d1cef74b47f827337f2383350cbdb4315887f"
+        },
+        "protected": false
+      },
+      {
+        "name": "temp_release_17394886478_25",
+        "commit": {
+          "sha": "219e292294e24a872ba136d2e80dec6da9dbd83a",
+          "url": "https://api.github.com/repos/YasharF/semantic-auto-release/commits/219e292294e24a872ba136d2e80dec6da9dbd83a"
+        },
+        "protected": false
+      },
+      {
+        "name": "temp_release_17394983066_26",
+        "commit": {
+          "sha": "00e9ee6dcbc91f99183162c208bec5b60185b122",
+          "url": "https://api.github.com/repos/YasharF/semantic-auto-release/commits/00e9ee6dcbc91f99183162c208bec5b60185b122"
+        },
+        "protected": false
+      },
+      {
+        "name": "temp_release_17395856211_27",
+        "commit": {
+          "sha": "b321b02b6bb806c35df19983ea2e41320c9684ed",
+          "url": "https://api.github.com/repos/YasharF/semantic-auto-release/commits/b321b02b6bb806c35df19983ea2e41320c9684ed"
+        },
+        "protected": false
+      },
+      {
+        "name": "temp_release_17396239028_28",
+        "commit": {
+          "sha": "9d6be506e77f6ba44961cac62861e06ce4f28fc6",
+          "url": "https://api.github.com/repos/YasharF/semantic-auto-release/commits/9d6be506e77f6ba44961cac62861e06ce4f28fc6"
+        },
+        "protected": false
+      },
+      {
+        "name": "temp_release_17396646837_29",
+        "commit": {
+          "sha": "85e824c3e01f09e926e74118b0618d332dd04015",
+          "url": "https://api.github.com/repos/YasharF/semantic-auto-release/commits/85e824c3e01f09e926e74118b0618d332dd04015"
+        },
+        "protected": false
+      },
+      {
+        "name": "temp_release_17396932540_30",
+        "commit": {
+          "sha": "6caca83ea7f39a16aca1f7f2ae18542b40fe09dc",
+          "url": "https://api.github.com/repos/YasharF/semantic-auto-release/commits/6caca83ea7f39a16aca1f7f2ae18542b40fe09dc"
+        },
+        "protected": false
+      },
+      {
+        "name": "temp_release_17397547967_31",
+        "commit": {
+          "sha": "2bfb65555576e716e1c4a1628cfa2d3bc82b3913",
+          "url": "https://api.github.com/repos/YasharF/semantic-auto-release/commits/2bfb65555576e716e1c4a1628cfa2d3bc82b3913"
+        },
+        "protected": false
+      },
+      {
+        "name": "temp_release_17397751756_32",
+        "commit": {
+          "sha": "afadc205f0a752ff59f734270ecdd2c577277eb5",
+          "url": "https://api.github.com/repos/YasharF/semantic-auto-release/commits/afadc205f0a752ff59f734270ecdd2c577277eb5"
+        },
+        "protected": false
+      },
+      {
+        "name": "temp_release_17397859734_33",
+        "commit": {
+          "sha": "b0f68eb274352c1844a9276c16266138ac94249a",
+          "url": "https://api.github.com/repos/YasharF/semantic-auto-release/commits/b0f68eb274352c1844a9276c16266138ac94249a"
+        },
+        "protected": false
+      },
+      {
+        "name": "temp_release_17407492981_34",
+        "commit": {
+          "sha": "212519f787738d0a0595b34fe4f3a8d54c35c452",
+          "url": "https://api.github.com/repos/YasharF/semantic-auto-release/commits/212519f787738d0a0595b34fe4f3a8d54c35c452"
+        },
+        "protected": false
+      },
+      {
+        "name": "temp_release_17415067711_35",
+        "commit": {
+          "sha": "0bca0f8f854f383051feec4535ee199d4a62e4f7",
+          "url": "https://api.github.com/repos/YasharF/semantic-auto-release/commits/0bca0f8f854f383051feec4535ee199d4a62e4f7"
+        },
+        "protected": false
+      },
+      {
+        "name": "temp_release_17415369709_36",
+        "commit": {
+          "sha": "2624ccc7cab198802d2d799958cbbf7f2bfe1a0c",
+          "url": "https://api.github.com/repos/YasharF/semantic-auto-release/commits/2624ccc7cab198802d2d799958cbbf7f2bfe1a0c"
+        },
+        "protected": false
+      },
+      {
+        "name": "temp_release_17416834402_42",
+        "commit": {
+          "sha": "fc16583fb869861cdcab0d0682ddda56f63bfd0e",
+          "url": "https://api.github.com/repos/YasharF/semantic-auto-release/commits/fc16583fb869861cdcab0d0682ddda56f63bfd0e"
+        },
+        "protected": false
+      },
+      {
+        "name": "temp_release_17416962450_43",
+        "commit": {
+          "sha": "77f802183b854ae8a2f5595752d9c033836e7d21",
+          "url": "https://api.github.com/repos/YasharF/semantic-auto-release/commits/77f802183b854ae8a2f5595752d9c033836e7d21"
+        },
+        "protected": false
+      },
+      {
+        "name": "temp_release_17434143561_52",
+        "commit": {
+          "sha": "946368c66d4f969c68668144ca3e64c94c8da248",
+          "url": "https://api.github.com/repos/YasharF/semantic-auto-release/commits/946368c66d4f969c68668144ca3e64c94c8da248"
+        },
+        "protected": false
+      },
+      {
+        "name": "temp_release_17434642190_54",
+        "commit": {
+          "sha": "9f33e0acab2a8c65849eda3bb40418d095313d14",
+          "url": "https://api.github.com/repos/YasharF/semantic-auto-release/commits/9f33e0acab2a8c65849eda3bb40418d095313d14"
+        },
+        "protected": false
+      },
+      {
+        "name": "temp_release_17434769698_55",
+        "commit": {
+          "sha": "cea6b3607226f2a8ee3d388bfeed5eace350bde1",
+          "url": "https://api.github.com/repos/YasharF/semantic-auto-release/commits/cea6b3607226f2a8ee3d388bfeed5eace350bde1"
+        },
+        "protected": false
+      },
+      {
+        "name": "temp_release_17435163917_56",
+        "commit": {
+          "sha": "4641df218e5c673bb8f0870b9c75de774f8fa68b",
+          "url": "https://api.github.com/repos/YasharF/semantic-auto-release/commits/4641df218e5c673bb8f0870b9c75de774f8fa68b"
+        },
+        "protected": false
+      },
+      {
+        "name": "temp_release_17435315964_57",
+        "commit": {
+          "sha": "6e8e32e14659a0e9d23fb349c063d503085bcd7a",
+          "url": "https://api.github.com/repos/YasharF/semantic-auto-release/commits/6e8e32e14659a0e9d23fb349c063d503085bcd7a"
+        },
+        "protected": false
+      },
+      {
+        "name": "temp_release_17441479318_58",
+        "commit": {
+          "sha": "801f2fae2e12581ef12695ba9038ae93295fce92",
+          "url": "https://api.github.com/repos/YasharF/semantic-auto-release/commits/801f2fae2e12581ef12695ba9038ae93295fce92"
+        },
+        "protected": false
+      },
+      {
+        "name": "temp_release_17441579252_59",
+        "commit": {
+          "sha": "5b125120efe18166f4cc3d5e2677b2964e621aa7",
+          "url": "https://api.github.com/repos/YasharF/semantic-auto-release/commits/5b125120efe18166f4cc3d5e2677b2964e621aa7"
+        },
+        "protected": false
+      },
+      {
+        "name": "temp_release_17441629117_60",
+        "commit": {
+          "sha": "1028fb301b36b6cdb8d29c5034a065c609b9f882",
+          "url": "https://api.github.com/repos/YasharF/semantic-auto-release/commits/1028fb301b36b6cdb8d29c5034a065c609b9f882"
+        },
+        "protected": false
+      },
+      {
+        "name": "temp_release_17441655200_61",
+        "commit": {
+          "sha": "4423f0b3d2712ae5b9620c59d7d0c99591802aaa",
+          "url": "https://api.github.com/repos/YasharF/semantic-auto-release/commits/4423f0b3d2712ae5b9620c59d7d0c99591802aaa"
+        },
+        "protected": false
+      },
+      {
+        "name": "temp_release_17441689241_62",
+        "commit": {
+          "sha": "4327f64ccf693d1477670949bd3b9cfa28e57b58",
+          "url": "https://api.github.com/repos/YasharF/semantic-auto-release/commits/4327f64ccf693d1477670949bd3b9cfa28e57b58"
+        },
+        "protected": false
+      },
+      {
+        "name": "temp_release_17441795438_63",
+        "commit": {
+          "sha": "f3eaa917970196cc83a541380f271b4a9cf53d8e",
+          "url": "https://api.github.com/repos/YasharF/semantic-auto-release/commits/f3eaa917970196cc83a541380f271b4a9cf53d8e"
+        },
+        "protected": false
+      },
+      {
+        "name": "temp_release_17441991800_65",
+        "commit": {
+          "sha": "4e7d9142dc626cf7536f7307e6b4b5b36d399976",
+          "url": "https://api.github.com/repos/YasharF/semantic-auto-release/commits/4e7d9142dc626cf7536f7307e6b4b5b36d399976"
+        },
+        "protected": false
+      },
+      {
+        "name": "temp_release_17442082600_66",
+        "commit": {
+          "sha": "26d7f4ea3f7a5be9a98922407c8b66b8c3553b4e",
+          "url": "https://api.github.com/repos/YasharF/semantic-auto-release/commits/26d7f4ea3f7a5be9a98922407c8b66b8c3553b4e"
+        },
+        "protected": false
+      },
+      {
+        "name": "temp_release_test_1",
+        "commit": {
+          "sha": "4f32073af34c4c4f7870c6032af4f426eb1cd49f",
+          "url": "https://api.github.com/repos/YasharF/semantic-auto-release/commits/4f32073af34c4c4f7870c6032af4f426eb1cd49f"
+        },
+        "protected": false
+      }
+    ]
+  }
+}

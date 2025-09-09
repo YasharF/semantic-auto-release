@@ -1,0 +1,31 @@
+name: PR Checks Experiment
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+permissions:
+  contents: read
+  pull-requests: read
+
+jobs:
+  fast-check:
+    name: fast-check
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Fast validation
+        run: echo "Fast check passed"
+
+  slow-check:
+    name: slow-check
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Simulate long-running check
+        run: |
+          echo "Starting slow check (sleeping 180s)"
+          sleep 180
+          echo "Slow check complete"

@@ -1,0 +1,8 @@
+{
+  "PAT_ADMIN": {
+    "status_code": 404,
+    "data": {
+      "message": "Branch protection not enabled"
+    }
+  }
+}

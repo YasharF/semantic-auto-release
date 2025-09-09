@@ -1,0 +1,105 @@
+{
+  "PAT_BAD": {
+    "endpoint": "https://api.github.com/repos/YasharF/semantic-auto-release/branches/main/protection",
+    "status_code": 401,
+    "ok": false,
+    "data": {
+      "message": "Bad credentials",
+      "documentation_url": "https://docs.github.com/rest",
+      "status": "401"
+    }
+  },
+  "PAT_ADMIN": {
+    "endpoint": "https://api.github.com/repos/YasharF/semantic-auto-release/branches/main/protection",
+    "status_code": 200,
+    "ok": true,
+    "data": {
+      "url": "https://api.github.com/repos/YasharF/semantic-auto-release/branches/main/protection",
+      "required_status_checks": {
+        "url": "https://api.github.com/repos/YasharF/semantic-auto-release/branches/main/protection/required_status_checks",
+        "strict": true,
+        "contexts": [
+          "build",
+          "test"
+        ],
+        "contexts_url": "https://api.github.com/repos/YasharF/semantic-auto-release/branches/main/protection/required_status_checks/contexts",
+        "checks": [
+          {
+            "context": "build",
+            "app_id": null
+          },
+          {
+            "context": "test",
+            "app_id": null
+          }
+        ]
+      },
+      "required_pull_request_reviews": {
+        "url": "https://api.github.com/repos/YasharF/semantic-auto-release/branches/main/protection/required_pull_request_reviews",
+        "dismiss_stale_reviews": false,
+        "require_code_owner_reviews": false,
+        "require_last_push_approval": false,
+        "required_approving_review_count": 2
+      },
+      "required_signatures": {
+        "url": "https://api.github.com/repos/YasharF/semantic-auto-release/branches/main/protection/required_signatures",
+        "enabled": false
+      },
+      "enforce_admins": {
+        "url": "https://api.github.com/repos/YasharF/semantic-auto-release/branches/main/protection/enforce_admins",
+        "enabled": true
+      },
+      "required_linear_history": {
+        "enabled": false
+      },
+      "allow_force_pushes": {
+        "enabled": false
+      },
+      "allow_deletions": {
+        "enabled": false
+      },
+      "block_creations": {
+        "enabled": false
+      },
+      "required_conversation_resolution": {
+        "enabled": false
+      },
+      "lock_branch": {
+        "enabled": false
+      },
+      "allow_fork_syncing": {
+        "enabled": false
+      }
+    }
+  },
+  "PAT_CONTENT_PR_STATUS": {
+    "endpoint": "https://api.github.com/repos/YasharF/semantic-auto-release/branches/main/protection",
+    "status_code": 403,
+    "ok": false,
+    "data": {
+      "message": "Resource not accessible by personal access token",
+      "documentation_url": "https://docs.github.com/rest/branches/branch-protection#get-branch-protection",
+      "status": "403"
+    }
+  },
+  "PAT_CONTENT_PR": {
+    "endpoint": "https://api.github.com/repos/YasharF/semantic-auto-release/branches/main/protection",
+    "status_code": 403,
+    "ok": false,
+    "data": {
+      "message": "Resource not accessible by personal access token",
+      "documentation_url": "https://docs.github.com/rest/branches/branch-protection#get-branch-protection",
+      "status": "403"
+    }
+  },
+  "PAT_MIN": {
+    "endpoint": "https://api.github.com/repos/YasharF/semantic-auto-release/branches/main/protection",
+    "status_code": 403,
+    "ok": false,
+    "data": {
+      "message": "Resource not accessible by personal access token",
+      "documentation_url": "https://docs.github.com/rest/branches/branch-protection#get-branch-protection",
+      "status": "403"
+    }
+  }
+}

@@ -1,0 +1,11 @@
+{
+  "PAT_ADMIN": {
+    "endpoint": "https://api.github.com/repos/example/classic-repo/branches/main/protection",
+    "status_code": 200,
+    "ok": true,
+    "data": {
+      "required_status_checks": { "contexts": ["build", "test"], "strict": true },
+      "required_pull_request_reviews": { "required_approving_review_count": 2 }
+    }
+  }
+}

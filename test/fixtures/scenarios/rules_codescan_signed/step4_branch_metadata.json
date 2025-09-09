@@ -1,0 +1,428 @@
+{
+  "PAT_BAD": {
+    "endpoint": "https://api.github.com/repos/YasharF/semantic-auto-release/branches/main",
+    "status_code": 401,
+    "ok": false,
+    "data": {
+      "message": "Bad credentials",
+      "documentation_url": "https://docs.github.com/rest",
+      "status": "401"
+    }
+  },
+  "PAT_ADMIN": {
+    "endpoint": "https://api.github.com/repos/YasharF/semantic-auto-release/branches/main",
+    "status_code": 200,
+    "ok": true,
+    "data": {
+      "name": "main",
+      "commit": {
+        "sha": "9697050784c5ed6dfa2311083148be8a055752c0",
+        "node_id": "C_kwDOPlFdFNoAKDk2OTcwNTA3ODRjNWVkNmRmYTIzMTEwODMxNDhiZThhMDU1NzUyYzA",
+        "commit": {
+          "author": {
+            "name": "Yashar Fakhari",
+            "email": "YasharF.Git1@ydftech.com",
+            "date": "2025-09-05T05:37:26Z"
+          },
+          "committer": {
+            "name": "Yashar Fakhari",
+            "email": "YasharF.Git1@ydftech.com",
+            "date": "2025-09-05T05:37:26Z"
+          },
+          "message": "feat: data capture",
+          "tree": {
+            "sha": "75363873a9ef85de325b403d9675af3be1e88b92",
+            "url": "https://api.github.com/repos/YasharF/semantic-auto-release/git/trees/75363873a9ef85de325b403d9675af3be1e88b92"
+          },
+          "url": "https://api.github.com/repos/YasharF/semantic-auto-release/git/commits/9697050784c5ed6dfa2311083148be8a055752c0",
+          "comment_count": 0,
+          "verification": {
+            "verified": false,
+            "reason": "unsigned",
+            "signature": null,
+            "payload": null,
+            "verified_at": null
+          }
+        },
+        "url": "https://api.github.com/repos/YasharF/semantic-auto-release/commits/9697050784c5ed6dfa2311083148be8a055752c0",
+        "html_url": "https://github.com/YasharF/semantic-auto-release/commit/9697050784c5ed6dfa2311083148be8a055752c0",
+        "comments_url": "https://api.github.com/repos/YasharF/semantic-auto-release/commits/9697050784c5ed6dfa2311083148be8a055752c0/comments",
+        "author": {
+          "login": "YasharF",
+          "id": 6448697,
+          "node_id": "MDQ6VXNlcjY0NDg2OTc=",
+          "avatar_url": "https://avatars.githubusercontent.com/u/6448697?v=4",
+          "gravatar_id": "",
+          "url": "https://api.github.com/users/YasharF",
+          "html_url": "https://github.com/YasharF",
+          "followers_url": "https://api.github.com/users/YasharF/followers",
+          "following_url": "https://api.github.com/users/YasharF/following{/other_user}",
+          "gists_url": "https://api.github.com/users/YasharF/gists{/gist_id}",
+          "starred_url": "https://api.github.com/users/YasharF/starred{/owner}{/repo}",
+          "subscriptions_url": "https://api.github.com/users/YasharF/subscriptions",
+          "organizations_url": "https://api.github.com/users/YasharF/orgs",
+          "repos_url": "https://api.github.com/users/YasharF/repos",
+          "events_url": "https://api.github.com/users/YasharF/events{/privacy}",
+          "received_events_url": "https://api.github.com/users/YasharF/received_events",
+          "type": "User",
+          "user_view_type": "public",
+          "site_admin": false
+        },
+        "committer": {
+          "login": "YasharF",
+          "id": 6448697,
+          "node_id": "MDQ6VXNlcjY0NDg2OTc=",
+          "avatar_url": "https://avatars.githubusercontent.com/u/6448697?v=4",
+          "gravatar_id": "",
+          "url": "https://api.github.com/users/YasharF",
+          "html_url": "https://github.com/YasharF",
+          "followers_url": "https://api.github.com/users/YasharF/followers",
+          "following_url": "https://api.github.com/users/YasharF/following{/other_user}",
+          "gists_url": "https://api.github.com/users/YasharF/gists{/gist_id}",
+          "starred_url": "https://api.github.com/users/YasharF/starred{/owner}{/repo}",
+          "subscriptions_url": "https://api.github.com/users/YasharF/subscriptions",
+          "organizations_url": "https://api.github.com/users/YasharF/orgs",
+          "repos_url": "https://api.github.com/users/YasharF/repos",
+          "events_url": "https://api.github.com/users/YasharF/events{/privacy}",
+          "received_events_url": "https://api.github.com/users/YasharF/received_events",
+          "type": "User",
+          "user_view_type": "public",
+          "site_admin": false
+        },
+        "parents": [
+          {
+            "sha": "4ccc3586b90d319cc38a31bdbc19b64e806bc79a",
+            "url": "https://api.github.com/repos/YasharF/semantic-auto-release/commits/4ccc3586b90d319cc38a31bdbc19b64e806bc79a",
+            "html_url": "https://github.com/YasharF/semantic-auto-release/commit/4ccc3586b90d319cc38a31bdbc19b64e806bc79a"
+          }
+        ]
+      },
+      "_links": {
+        "self": "https://api.github.com/repos/YasharF/semantic-auto-release/branches/main",
+        "html": "https://github.com/YasharF/semantic-auto-release/tree/main"
+      },
+      "protected": false,
+      "protection": {
+        "enabled": false,
+        "required_status_checks": {
+          "enforcement_level": "off",
+          "contexts": [],
+          "checks": []
+        }
+      },
+      "protection_url": "https://api.github.com/repos/YasharF/semantic-auto-release/branches/main/protection"
+    }
+  },
+  "PAT_CONTENT_PR_STATUS": {
+    "endpoint": "https://api.github.com/repos/YasharF/semantic-auto-release/branches/main",
+    "status_code": 200,
+    "ok": true,
+    "data": {
+      "name": "main",
+      "commit": {
+        "sha": "9697050784c5ed6dfa2311083148be8a055752c0",
+        "node_id": "C_kwDOPlFdFNoAKDk2OTcwNTA3ODRjNWVkNmRmYTIzMTEwODMxNDhiZThhMDU1NzUyYzA",
+        "commit": {
+          "author": {
+            "name": "Yashar Fakhari",
+            "email": "YasharF.Git1@ydftech.com",
+            "date": "2025-09-05T05:37:26Z"
+          },
+          "committer": {
+            "name": "Yashar Fakhari",
+            "email": "YasharF.Git1@ydftech.com",
+            "date": "2025-09-05T05:37:26Z"
+          },
+          "message": "feat: data capture",
+          "tree": {
+            "sha": "75363873a9ef85de325b403d9675af3be1e88b92",
+            "url": "https://api.github.com/repos/YasharF/semantic-auto-release/git/trees/75363873a9ef85de325b403d9675af3be1e88b92"
+          },
+          "url": "https://api.github.com/repos/YasharF/semantic-auto-release/git/commits/9697050784c5ed6dfa2311083148be8a055752c0",
+          "comment_count": 0,
+          "verification": {
+            "verified": false,
+            "reason": "unsigned",
+            "signature": null,
+            "payload": null,
+            "verified_at": null
+          }
+        },
+        "url": "https://api.github.com/repos/YasharF/semantic-auto-release/commits/9697050784c5ed6dfa2311083148be8a055752c0",
+        "html_url": "https://github.com/YasharF/semantic-auto-release/commit/9697050784c5ed6dfa2311083148be8a055752c0",
+        "comments_url": "https://api.github.com/repos/YasharF/semantic-auto-release/commits/9697050784c5ed6dfa2311083148be8a055752c0/comments",
+        "author": {
+          "login": "YasharF",
+          "id": 6448697,
+          "node_id": "MDQ6VXNlcjY0NDg2OTc=",
+          "avatar_url": "https://avatars.githubusercontent.com/u/6448697?v=4",
+          "gravatar_id": "",
+          "url": "https://api.github.com/users/YasharF",
+          "html_url": "https://github.com/YasharF",
+          "followers_url": "https://api.github.com/users/YasharF/followers",
+          "following_url": "https://api.github.com/users/YasharF/following{/other_user}",
+          "gists_url": "https://api.github.com/users/YasharF/gists{/gist_id}",
+          "starred_url": "https://api.github.com/users/YasharF/starred{/owner}{/repo}",
+          "subscriptions_url": "https://api.github.com/users/YasharF/subscriptions",
+          "organizations_url": "https://api.github.com/users/YasharF/orgs",
+          "repos_url": "https://api.github.com/users/YasharF/repos",
+          "events_url": "https://api.github.com/users/YasharF/events{/privacy}",
+          "received_events_url": "https://api.github.com/users/YasharF/received_events",
+          "type": "User",
+          "user_view_type": "public",
+          "site_admin": false
+        },
+        "committer": {
+          "login": "YasharF",
+          "id": 6448697,
+          "node_id": "MDQ6VXNlcjY0NDg2OTc=",
+          "avatar_url": "https://avatars.githubusercontent.com/u/6448697?v=4",
+          "gravatar_id": "",
+          "url": "https://api.github.com/users/YasharF",
+          "html_url": "https://github.com/YasharF",
+          "followers_url": "https://api.github.com/users/YasharF/followers",
+          "following_url": "https://api.github.com/users/YasharF/following{/other_user}",
+          "gists_url": "https://api.github.com/users/YasharF/gists{/gist_id}",
+          "starred_url": "https://api.github.com/users/YasharF/starred{/owner}{/repo}",
+          "subscriptions_url": "https://api.github.com/users/YasharF/subscriptions",
+          "organizations_url": "https://api.github.com/users/YasharF/orgs",
+          "repos_url": "https://api.github.com/users/YasharF/repos",
+          "events_url": "https://api.github.com/users/YasharF/events{/privacy}",
+          "received_events_url": "https://api.github.com/users/YasharF/received_events",
+          "type": "User",
+          "user_view_type": "public",
+          "site_admin": false
+        },
+        "parents": [
+          {
+            "sha": "4ccc3586b90d319cc38a31bdbc19b64e806bc79a",
+            "url": "https://api.github.com/repos/YasharF/semantic-auto-release/commits/4ccc3586b90d319cc38a31bdbc19b64e806bc79a",
+            "html_url": "https://github.com/YasharF/semantic-auto-release/commit/4ccc3586b90d319cc38a31bdbc19b64e806bc79a"
+          }
+        ]
+      },
+      "_links": {
+        "self": "https://api.github.com/repos/YasharF/semantic-auto-release/branches/main",
+        "html": "https://github.com/YasharF/semantic-auto-release/tree/main"
+      },
+      "protected": false,
+      "protection": {
+        "enabled": false,
+        "required_status_checks": {
+          "enforcement_level": "off",
+          "contexts": [],
+          "checks": []
+        }
+      },
+      "protection_url": "https://api.github.com/repos/YasharF/semantic-auto-release/branches/main/protection"
+    }
+  },
+  "PAT_CONTENT_PR": {
+    "endpoint": "https://api.github.com/repos/YasharF/semantic-auto-release/branches/main",
+    "status_code": 200,
+    "ok": true,
+    "data": {
+      "name": "main",
+      "commit": {
+        "sha": "9697050784c5ed6dfa2311083148be8a055752c0",
+        "node_id": "C_kwDOPlFdFNoAKDk2OTcwNTA3ODRjNWVkNmRmYTIzMTEwODMxNDhiZThhMDU1NzUyYzA",
+        "commit": {
+          "author": {
+            "name": "Yashar Fakhari",
+            "email": "YasharF.Git1@ydftech.com",
+            "date": "2025-09-05T05:37:26Z"
+          },
+          "committer": {
+            "name": "Yashar Fakhari",
+            "email": "YasharF.Git1@ydftech.com",
+            "date": "2025-09-05T05:37:26Z"
+          },
+          "message": "feat: data capture",
+          "tree": {
+            "sha": "75363873a9ef85de325b403d9675af3be1e88b92",
+            "url": "https://api.github.com/repos/YasharF/semantic-auto-release/git/trees/75363873a9ef85de325b403d9675af3be1e88b92"
+          },
+          "url": "https://api.github.com/repos/YasharF/semantic-auto-release/git/commits/9697050784c5ed6dfa2311083148be8a055752c0",
+          "comment_count": 0,
+          "verification": {
+            "verified": false,
+            "reason": "unsigned",
+            "signature": null,
+            "payload": null,
+            "verified_at": null
+          }
+        },
+        "url": "https://api.github.com/repos/YasharF/semantic-auto-release/commits/9697050784c5ed6dfa2311083148be8a055752c0",
+        "html_url": "https://github.com/YasharF/semantic-auto-release/commit/9697050784c5ed6dfa2311083148be8a055752c0",
+        "comments_url": "https://api.github.com/repos/YasharF/semantic-auto-release/commits/9697050784c5ed6dfa2311083148be8a055752c0/comments",
+        "author": {
+          "login": "YasharF",
+          "id": 6448697,
+          "node_id": "MDQ6VXNlcjY0NDg2OTc=",
+          "avatar_url": "https://avatars.githubusercontent.com/u/6448697?v=4",
+          "gravatar_id": "",
+          "url": "https://api.github.com/users/YasharF",
+          "html_url": "https://github.com/YasharF",
+          "followers_url": "https://api.github.com/users/YasharF/followers",
+          "following_url": "https://api.github.com/users/YasharF/following{/other_user}",
+          "gists_url": "https://api.github.com/users/YasharF/gists{/gist_id}",
+          "starred_url": "https://api.github.com/users/YasharF/starred{/owner}{/repo}",
+          "subscriptions_url": "https://api.github.com/users/YasharF/subscriptions",
+          "organizations_url": "https://api.github.com/users/YasharF/orgs",
+          "repos_url": "https://api.github.com/users/YasharF/repos",
+          "events_url": "https://api.github.com/users/YasharF/events{/privacy}",
+          "received_events_url": "https://api.github.com/users/YasharF/received_events",
+          "type": "User",
+          "user_view_type": "public",
+          "site_admin": false
+        },
+        "committer": {
+          "login": "YasharF",
+          "id": 6448697,
+          "node_id": "MDQ6VXNlcjY0NDg2OTc=",
+          "avatar_url": "https://avatars.githubusercontent.com/u/6448697?v=4",
+          "gravatar_id": "",
+          "url": "https://api.github.com/users/YasharF",
+          "html_url": "https://github.com/YasharF",
+          "followers_url": "https://api.github.com/users/YasharF/followers",
+          "following_url": "https://api.github.com/users/YasharF/following{/other_user}",
+          "gists_url": "https://api.github.com/users/YasharF/gists{/gist_id}",
+          "starred_url": "https://api.github.com/users/YasharF/starred{/owner}{/repo}",
+          "subscriptions_url": "https://api.github.com/users/YasharF/subscriptions",
+          "organizations_url": "https://api.github.com/users/YasharF/orgs",
+          "repos_url": "https://api.github.com/users/YasharF/repos",
+          "events_url": "https://api.github.com/users/YasharF/events{/privacy}",
+          "received_events_url": "https://api.github.com/users/YasharF/received_events",
+          "type": "User",
+          "user_view_type": "public",
+          "site_admin": false
+        },
+        "parents": [
+          {
+            "sha": "4ccc3586b90d319cc38a31bdbc19b64e806bc79a",
+            "url": "https://api.github.com/repos/YasharF/semantic-auto-release/commits/4ccc3586b90d319cc38a31bdbc19b64e806bc79a",
+            "html_url": "https://github.com/YasharF/semantic-auto-release/commit/4ccc3586b90d319cc38a31bdbc19b64e806bc79a"
+          }
+        ]
+      },
+      "_links": {
+        "self": "https://api.github.com/repos/YasharF/semantic-auto-release/branches/main",
+        "html": "https://github.com/YasharF/semantic-auto-release/tree/main"
+      },
+      "protected": false,
+      "protection": {
+        "enabled": false,
+        "required_status_checks": {
+          "enforcement_level": "off",
+          "contexts": [],
+          "checks": []
+        }
+      },
+      "protection_url": "https://api.github.com/repos/YasharF/semantic-auto-release/branches/main/protection"
+    }
+  },
+  "PAT_MIN": {
+    "endpoint": "https://api.github.com/repos/YasharF/semantic-auto-release/branches/main",
+    "status_code": 200,
+    "ok": true,
+    "data": {
+      "name": "main",
+      "commit": {
+        "sha": "9697050784c5ed6dfa2311083148be8a055752c0",
+        "node_id": "C_kwDOPlFdFNoAKDk2OTcwNTA3ODRjNWVkNmRmYTIzMTEwODMxNDhiZThhMDU1NzUyYzA",
+        "commit": {
+          "author": {
+            "name": "Yashar Fakhari",
+            "email": "YasharF.Git1@ydftech.com",
+            "date": "2025-09-05T05:37:26Z"
+          },
+          "committer": {
+            "name": "Yashar Fakhari",
+            "email": "YasharF.Git1@ydftech.com",
+            "date": "2025-09-05T05:37:26Z"
+          },
+          "message": "feat: data capture",
+          "tree": {
+            "sha": "75363873a9ef85de325b403d9675af3be1e88b92",
+            "url": "https://api.github.com/repos/YasharF/semantic-auto-release/git/trees/75363873a9ef85de325b403d9675af3be1e88b92"
+          },
+          "url": "https://api.github.com/repos/YasharF/semantic-auto-release/git/commits/9697050784c5ed6dfa2311083148be8a055752c0",
+          "comment_count": 0,
+          "verification": {
+            "verified": false,
+            "reason": "unsigned",
+            "signature": null,
+            "payload": null,
+            "verified_at": null
+          }
+        },
+        "url": "https://api.github.com/repos/YasharF/semantic-auto-release/commits/9697050784c5ed6dfa2311083148be8a055752c0",
+        "html_url": "https://github.com/YasharF/semantic-auto-release/commit/9697050784c5ed6dfa2311083148be8a055752c0",
+        "comments_url": "https://api.github.com/repos/YasharF/semantic-auto-release/commits/9697050784c5ed6dfa2311083148be8a055752c0/comments",
+        "author": {
+          "login": "YasharF",
+          "id": 6448697,
+          "node_id": "MDQ6VXNlcjY0NDg2OTc=",
+          "avatar_url": "https://avatars.githubusercontent.com/u/6448697?v=4",
+          "gravatar_id": "",
+          "url": "https://api.github.com/users/YasharF",
+          "html_url": "https://github.com/YasharF",
+          "followers_url": "https://api.github.com/users/YasharF/followers",
+          "following_url": "https://api.github.com/users/YasharF/following{/other_user}",
+          "gists_url": "https://api.github.com/users/YasharF/gists{/gist_id}",
+          "starred_url": "https://api.github.com/users/YasharF/starred{/owner}{/repo}",
+          "subscriptions_url": "https://api.github.com/users/YasharF/subscriptions",
+          "organizations_url": "https://api.github.com/users/YasharF/orgs",
+          "repos_url": "https://api.github.com/users/YasharF/repos",
+          "events_url": "https://api.github.com/users/YasharF/events{/privacy}",
+          "received_events_url": "https://api.github.com/users/YasharF/received_events",
+          "type": "User",
+          "user_view_type": "public",
+          "site_admin": false
+        },
+        "committer": {
+          "login": "YasharF",
+          "id": 6448697,
+          "node_id": "MDQ6VXNlcjY0NDg2OTc=",
+          "avatar_url": "https://avatars.githubusercontent.com/u/6448697?v=4",
+          "gravatar_id": "",
+          "url": "https://api.github.com/users/YasharF",
+          "html_url": "https://github.com/YasharF",
+          "followers_url": "https://api.github.com/users/YasharF/followers",
+          "following_url": "https://api.github.com/users/YasharF/following{/other_user}",
+          "gists_url": "https://api.github.com/users/YasharF/gists{/gist_id}",
+          "starred_url": "https://api.github.com/users/YasharF/starred{/owner}{/repo}",
+          "subscriptions_url": "https://api.github.com/users/YasharF/subscriptions",
+          "organizations_url": "https://api.github.com/users/YasharF/orgs",
+          "repos_url": "https://api.github.com/users/YasharF/repos",
+          "events_url": "https://api.github.com/users/YasharF/events{/privacy}",
+          "received_events_url": "https://api.github.com/users/YasharF/received_events",
+          "type": "User",
+          "user_view_type": "public",
+          "site_admin": false
+        },
+        "parents": [
+          {
+            "sha": "4ccc3586b90d319cc38a31bdbc19b64e806bc79a",
+            "url": "https://api.github.com/repos/YasharF/semantic-auto-release/commits/4ccc3586b90d319cc38a31bdbc19b64e806bc79a",
+            "html_url": "https://github.com/YasharF/semantic-auto-release/commit/4ccc3586b90d319cc38a31bdbc19b64e806bc79a"
+          }
+        ]
+      },
+      "_links": {
+        "self": "https://api.github.com/repos/YasharF/semantic-auto-release/branches/main",
+        "html": "https://github.com/YasharF/semantic-auto-release/tree/main"
+      },
+      "protected": false,
+      "protection": {
+        "enabled": false,
+        "required_status_checks": {
+          "enforcement_level": "off",
+          "contexts": [],
+          "checks": []
+        }
+      },
+      "protection_url": "https://api.github.com/repos/YasharF/semantic-auto-release/branches/main/protection"
+    }
+  }
+}
