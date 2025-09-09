@@ -80,6 +80,12 @@ async function createBranch(base, branch) {
     "CHECKS_EXPERIMENT.md",
     `\nExperiment touch ${new Date().toISOString()}\n`,
   );
+  // Format the touched file so pre-commit prettier passes
+  try {
+    execSync("npx prettier --write CHECKS_EXPERIMENT.md", { stdio: "inherit" });
+  } catch (e) {
+    console.warn("Prettier format (initial touch) failed:", e.message);
+  }
   execSync("git add CHECKS_EXPERIMENT.md", { stdio: "inherit" });
   execSync('git commit -m "chore(experiment): trigger checks"', {
     stdio: "inherit",
@@ -263,9 +269,18 @@ async function run() {
   // Auto-commit the report so it persists on the experiment branch
   try {
     execSync("git add docs/EXPERIMENT_PR_CHECKS.md", { stdio: "inherit" });
+    // Format report before committing to satisfy prettier hook
+    try {
+      execSync("npx prettier --write docs/EXPERIMENT_PR_CHECKS.md", {
+        stdio: "inherit",
+      });
+    } catch (e) {
+      console.warn("Prettier format (report) failed:", e.message);
+    }
     execSync('git commit -m "docs(experiment): add PR checks report"', {
       stdio: "inherit",
     });
+    execSync(`git push origin ${branch}`, { stdio: "inherit" });
   } catch (e) {
     console.warn("Could not auto-commit report (maybe no changes):", e.message);
   }
