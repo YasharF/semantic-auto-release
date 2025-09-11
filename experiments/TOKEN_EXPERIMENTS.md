@@ -286,4 +286,4 @@ Current captured dataset shows no observable difference between these two tokens
 
 ### Experiment: Required Checks Progression (PR Checks Report)
 
-See `EXPERIMENT_PR_CHECKS.md` for empirical timeline of two required checks (fast vs slow). Result: No additional observable data surfaced by the token with explicit statuses read permission beyond the baseline token; combined status transitioned only after both checks completed. Conclusion: statuses read permission is not required for current product capability set (PR readiness + protection feature detection).
+See `experiments/EXPERIMENT_PR_CHECKS.md` (archived) for empirical timeline of two required checks (fast vs slow). Result: No additional observable data surfaced by the token with explicit statuses read permission beyond the baseline token; combined status transitioned only after both checks completed. Conclusion: statuses read permission is not required for current product capability set (PR readiness + protection feature detection).

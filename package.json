@@ -50,10 +50,10 @@
     "scenario:rules-codescan-signed": "ACTION=capture-scenario SCENARIO=rules_codescan_signed CHECKS=build,test APPROVALS=2 node scripts/repo-admin.js",
     "scenario:classic-signed": "ACTION=capture-scenario SCENARIO=classic_signed CHECKS=build,test APPROVALS=2 node scripts/repo-admin.js",
     "scenario:classic-rules-codescan-signed": "ACTION=capture-scenario SCENARIO=classic_rules_codescan_signed CHECKS=build,test APPROVALS=2 node scripts/repo-admin.js",
-    "experiment:branch-protection": "node scripts/experiment-branch-protection.js",
-    "experiment:run-checks": "node scripts/run-checks-experiment.js",
-    "verify:classic-checks": "node scripts/verify-classic-checks.js",
-    "probe:checks-vs-statuses": "node scripts/probe-checks-vs-statuses.js"
+    "experiment:branch-protection": "node experiments/experiment-branch-protection.js",
+    "experiment:run-checks": "node experiments/run-checks-experiment.js",
+    "verify:classic-checks": "node experiments/verify-classic-checks.js",
+    "probe:checks-vs-statuses": "node experiments/probe-checks-vs-statuses.js"
   },
   "lint-staged": {
     "**/*.{js,yml,md,sh}": "prettier --check",
