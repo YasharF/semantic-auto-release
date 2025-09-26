@@ -231,6 +231,9 @@ async function assessLive(_opts) {
             requiredApprovals =
               prRule.parameters?.required_approving_review_count;
           }
+        } else {
+          // Rules readable, no pull_request rule => explicitly false (not required)
+          prRequired = prRequired ?? false;
         }
         // deferred
       }
@@ -433,6 +436,9 @@ function assessFromFixtures(fixtureDir, opts) {
             requiredApprovals =
               prRule.parameters?.required_approving_review_count;
           }
+        } else {
+          // Rules readable, no PR rule present
+          prRequired = prRequired ?? false;
         }
         // deferred enforcement flags removed
       } else if (branchProtection === "unknown") {
