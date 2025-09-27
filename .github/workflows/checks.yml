@@ -1,4 +1,4 @@
-name: Checks
+name: Tests and Validations
 
 on:
   workflow_call:

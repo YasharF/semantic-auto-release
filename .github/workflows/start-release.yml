@@ -160,7 +160,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          node ./scripts/publish-check-statuses.js --sha "${{ needs.stage-release.outputs.commit_sha }}"
+          node ./scripts/sync-check-statuses.js --sha "${{ needs.stage-release.outputs.commit_sha }}"
 
   create-pr:
     name: Release PR
