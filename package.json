@@ -1,6 +1,6 @@
 {
   "name": "@yasharf/semantic-auto-release",
-  "version": "2.0.0",
+  "version": "1.3.5",
   "description": "Automated release workflow for JavaScript/TypeScript projects using semantic-release, Conventional Commits, and changelog updates.",
   "keywords": [
     "automation",

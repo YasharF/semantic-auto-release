@@ -166,7 +166,10 @@ jobs:
       - name: Wait for PR to merge
         run: |
           for attempt in {1..60}; do
-            data=$(gh pr view ${{ needs.create-pr.outputs.pr_number }} --json state,mergeCommit --jq '{state: .state, sha: .mergeCommit.oid}')
+            data=$(gh pr view ${{ needs.create-pr.outputs.pr_number }} \
+              --repo "$GITHUB_REPOSITORY" \
+              --json state,mergeCommit \
+              --jq '{state: .state, sha: .mergeCommit.oid}')
             state=$(echo "$data" | jq -r '.state')
             sha=$(echo "$data" | jq -r '.sha')
             if [ "$state" = "MERGED" ] && [ "$sha" != "null" ]; then
