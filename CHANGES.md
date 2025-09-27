@@ -1,3 +1,18 @@
+## 3.1.0 - 2025-09-27
+
+# [3.1.0](https://github.com/YasharF/semantic-auto-release/compare/v3.0.0...v3.1.0) (2025-09-27)
+
+
+### Bug Fixes
+
+* npm upgrade and token permissions for publish ([#194](https://github.com/YasharF/semantic-auto-release/issues/194)) ([f14bdbc](https://github.com/YasharF/semantic-auto-release/commit/f14bdbccac4fd01e05b7ac649d306916a3238f44))
+* undo release commit ([#196](https://github.com/YasharF/semantic-auto-release/issues/196)) ([bb0061e](https://github.com/YasharF/semantic-auto-release/commit/bb0061ed1dba3dd10490c79d170922956a777e8a))
+
+
+### Features
+
+* use a single variable for the changelog file name ([#191](https://github.com/YasharF/semantic-auto-release/issues/191)) ([89e4009](https://github.com/YasharF/semantic-auto-release/commit/89e4009caa1ecd2a952ae610a7db6baa273e8ba3))
+
 ## 3.0.0 - 2025-09-27
 
 # [3.0.0](https://github.com/YasharF/semantic-auto-release/compare/v2.0.0...v3.0.0) (2025-09-27)
