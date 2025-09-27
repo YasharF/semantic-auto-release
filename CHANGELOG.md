@@ -1,0 +1,31 @@
+## 2.0.0 - 2025-09-27
+
+# [2.0.0](https://github.com/YasharF/semantic-auto-release/compare/v1.3.4...v2.0.0) (2025-09-27)
+
+### Bug Fixes
+
+- add debug ([28a2ed6](https://github.com/YasharF/semantic-auto-release/commit/28a2ed67583dcce9ab4e283bce09d8149cd4daec))
+- add debug ([5ee8d80](https://github.com/YasharF/semantic-auto-release/commit/5ee8d80b2e06ece8c988c841aa48b7af266d4df1))
+- bug in setting env variable ([#153](https://github.com/YasharF/semantic-auto-release/issues/153)) ([8faf624](https://github.com/YasharF/semantic-auto-release/commit/8faf624305d00a8d5fa0ac668d07a425b2f12e98))
+- check branch protection ([0117e52](https://github.com/YasharF/semantic-auto-release/commit/0117e526c2a63e467fdfcfedf28138511dcb8abd))
+- debug ([4dd2d32](https://github.com/YasharF/semantic-auto-release/commit/4dd2d32d77a6d65c0b9b6c2e0afdd46314676cb9))
+- edit doc just to have a release for testing ([5a0c058](https://github.com/YasharF/semantic-auto-release/commit/5a0c058577e73957587045a4af762b06acabc87e))
+- edit doc just to have a release for testing ([f8bcc7a](https://github.com/YasharF/semantic-auto-release/commit/f8bcc7a89c7e8812a3bbb876d29b3c5821da8eee))
+- handle PAT with no branch protection ([704bad0](https://github.com/YasharF/semantic-auto-release/commit/704bad0099cb9875cfd559cf367f984b9bfec650))
+- improved logging ([3d30cba](https://github.com/YasharF/semantic-auto-release/commit/3d30cbab6b22cd42bc4b56245e5ab9d409337e2a))
+- initial step to change token selection logic ([bb6fd05](https://github.com/YasharF/semantic-auto-release/commit/bb6fd052a290f34690da49641fa7c94a450aaa7a))
+- install dependencies for release workflow ([#150](https://github.com/YasharF/semantic-auto-release/issues/150)) ([5338bf6](https://github.com/YasharF/semantic-auto-release/commit/5338bf6ec5561edd2ec9dc9fddaf2d823064816a))
+- just call branch protection with our debug token ([4ccc358](https://github.com/YasharF/semantic-auto-release/commit/4ccc3586b90d319cc38a31bdbc19b64e806bc79a))
+- output branch protection ([ee5b653](https://github.com/YasharF/semantic-auto-release/commit/ee5b653712aab60b076944dae6b606e3fb08a436))
+- output branch protection with call status ([3fb12cd](https://github.com/YasharF/semantic-auto-release/commit/3fb12cdfcbeac6a3d46c536f169c8b9a1f75d9f8))
+- set env variable for exporting the release data ([#151](https://github.com/YasharF/semantic-auto-release/issues/151)) ([7d5eaef](https://github.com/YasharF/semantic-auto-release/commit/7d5eaef30fef35c3088ad8a408256fc199aefb64))
+- set env variable with GitHub token ([#152](https://github.com/YasharF/semantic-auto-release/issues/152)) ([2a4b281](https://github.com/YasharF/semantic-auto-release/commit/2a4b281acf3b47e828c45725dc366d12a346c15c))
+
+### Features
+
+- data capture ([9697050](https://github.com/YasharF/semantic-auto-release/commit/9697050784c5ed6dfa2311083148be8a055752c0))
+- rewrite without pat ([1da5f99](https://github.com/YasharF/semantic-auto-release/commit/1da5f99897f9a448b4083b041abc927d8f491467))
+
+### BREAKING CHANGES
+
+- all different
