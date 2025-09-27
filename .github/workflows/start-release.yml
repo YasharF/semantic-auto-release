@@ -78,4 +78,8 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           PR_NUMBER=$(gh pr view ${{ env.PR_URL }} --json number --jq '.number')
+          gh pr close $PR_NUMBER
+          sleep 5
+          gh pr reopen $PR_NUMBER
+          sleep 5
           gh pr merge --squash --auto $PR_NUMBER
