@@ -1,12 +1,3 @@
-## 3.2.0 - 2025-09-27
-
-# [3.2.0](https://github.com/YasharF/semantic-auto-release/compare/v3.1.1...v3.2.0) (2025-09-27)
-
-
-### Features
-
-* get the commit status checks ([#203](https://github.com/YasharF/semantic-auto-release/issues/203)) ([74967af](https://github.com/YasharF/semantic-auto-release/commit/74967af38de4aef623c71f879d79c64d0d058404))
-
 ## 3.1.1 - 2025-09-27
 
 ## [3.1.1](https://github.com/YasharF/semantic-auto-release/compare/v3.1.0...v3.1.1) (2025-09-27)

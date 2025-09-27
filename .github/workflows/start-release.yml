@@ -132,30 +132,32 @@ jobs:
     permissions:
       statuses: write
       checks: read
+      actions: read
     steps:
-      - name: Log check run results
+      - name: Log reusable check jobs
         uses: actions/github-script@v7
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
             const owner = context.repo.owner;
             const repo = context.repo.repo;
-            const sha = '${{ needs.stage-release.outputs.commit_sha }}';
-            const runs = await github.paginate(
-              github.rest.checks.listForRef,
+            const runId = context.runId ?? process.env.GITHUB_RUN_ID;
+            const jobs = await github.paginate(
+              github.rest.actions.listJobsForWorkflowRun,
               {
                 owner,
                 repo,
-                ref: sha,
+                run_id: runId,
                 per_page: 100,
-              }
+              },
+              (response) => response.data.jobs
             );
-            core.info(`Check runs for ${sha}:`);
-            if (!runs.length) {
+            core.info(`Jobs for workflow run ${runId}:`);
+            if (!jobs.length) {
               core.info('- none');
             }
-            for (const run of runs) {
-              core.info(`- ${run.name ?? 'unknown'} :: status=${run.status} conclusion=${run.conclusion}`);
+            for (const job of jobs) {
+              core.info(`- ${job.name ?? 'unknown'} :: status=${job.status} conclusion=${job.conclusion}`);
             }
 
       - name: Publish required statuses
