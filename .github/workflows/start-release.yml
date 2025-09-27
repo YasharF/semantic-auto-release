@@ -7,6 +7,7 @@ on:
 
 env:
   CHANGELOG_FILE: CHANGES.md
+  PRETTIER_CHANGELOG: "true"
 
 permissions:
   contents: read
@@ -103,7 +104,8 @@ jobs:
       - name: Update changelog
         run: node ./scripts/write-changes-md.js ${{ needs.evaluate-release.outputs.version }} "${{ env.CHANGELOG_FILE }}"
 
-      - name: Optionally run Prettier on changelog
+      - name: Run Prettier on changelog
+        if: env.PRETTIER_CHANGELOG == 'true'
         run: npx prettier --write "${{ env.CHANGELOG_FILE }}"
 
       - name: Collect release notes
