@@ -25,6 +25,8 @@ jobs:
         run: npm ci
 
       - name: Determine release version
+        env:
+          release_step: create_release_files
         run: |
           npx semantic-release --no-ci --dry-run --extends ./release.config.js
           echo "VERSION=$(cat version.txt)" >> $GITHUB_ENV

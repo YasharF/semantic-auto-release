@@ -1,7 +1,7 @@
 const fs = require("fs");
 
 function exportData(name, value) {
-  console.log(`semantic-release-export-data: ${name}=${value}`);
+  console.log(`semantic-release-data: ${name}=${value}`);
   if (name === "new-release-version") {
     fs.writeFileSync("version.txt", value);
   }

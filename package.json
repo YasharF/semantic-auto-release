@@ -11,9 +11,6 @@
     "npm-publish",
     "semantic-release"
   ],
-  "bin": {
-    "auto-release-setup": "scripts/setup.js"
-  },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/yasharf/semantic-auto-release.git"
@@ -25,9 +22,8 @@
     "./release": "./release.config.js",
     "./conventional-commits": "./.husky/commit-msg"
   },
-  "main": "dist/index.js",
+  "main": "index.js",
   "files": [
-    "dist/**/*",
     "commitlint.config.js",
     "release.config.js",
     "plugins/export-release-data.js"
