@@ -109,8 +109,8 @@ jobs:
             const repo = context.repo.repo;
             const sha = '${{ needs.prepare-release.outputs.commit_sha }}';
             const statuses = [
-              { context: 'Main / build',        description: 'Release checks passed' },
-              { context: 'Main / pr_title_check', description: 'Release PR title validated' }
+              { context: 'Build & Commit Checks', description: 'succeeded ' },
+              { context: 'PR Title Check', description: 'succeeded' }
             ];
             for (const status of statuses) {
               await github.rest.repos.createCommitStatus({
