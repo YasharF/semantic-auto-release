@@ -2,7 +2,7 @@ name: Start Release
 
 on:
   schedule:
-    - cron: "0 0 1 * *" # 1st of each month at midnight
+    - cron: "0 0 1 * *"
   workflow_dispatch:
 
 permissions:
@@ -10,8 +10,11 @@ permissions:
   pull-requests: write
 
 jobs:
-  create-pr:
+  prepare-release:
     runs-on: ubuntu-latest
+    outputs:
+      temp_branch: ${{ steps.commit_branch.outputs.temp_branch }}
+      version: ${{ steps.determine_version.outputs.version }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v5
@@ -25,61 +28,46 @@ jobs:
         run: npm ci
 
       - name: Determine release version
+        id: determine_version
         env:
           release_step: create_release_files
         run: |
           npx semantic-release --no-ci --dry-run --extends ./release.config.js
-          echo "VERSION=$(cat version.txt)" >> $GITHUB_ENV
+          VERSION=$(cat version.txt)
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
 
       - name: Update package.json version
-        run: node ./scripts/update-packagejson-ver.js ${{ env.VERSION }}
+        run: node ./scripts/update-packagejson-ver.js ${{ steps.determine_version.outputs.version }}
 
       - name: Update changelog
-        run: node ./scripts/write-changes-md.js ${{ env.VERSION }} CHANGELOG.md
-        # If the repo owner uses CHANGES.md or another file instead,
-        # they should edit this line accordingly.
+        run: node ./scripts/write-changes-md.js ${{ steps.determine_version.outputs.version }} CHANGELOG.md
 
       - name: Optionally run Prettier on changelog
         run: npx prettier --write CHANGELOG.md
-        # Repo owner can comment this step out if they don’t want formatting.
 
       - name: Commit ephemeral branch
+        id: commit_branch
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           TEMP_BRANCH="temp_release_${GITHUB_RUN_ID}_${GITHUB_RUN_NUMBER}"
           git checkout -b "$TEMP_BRANCH"
           git add package.json package-lock.json CHANGELOG.md
-          git commit -m "chore(release): ${VERSION}" || echo "No changes to commit"
+          git commit -m "chore(release): ${{ steps.determine_version.outputs.version }}" || echo "No changes to commit"
           git push origin "$TEMP_BRANCH" --force
-          echo "TEMP_BRANCH=$TEMP_BRANCH" >> $GITHUB_ENV
+          echo "temp_branch=$TEMP_BRANCH" >> $GITHUB_OUTPUT
 
-      - name: Wait for branch registration
-        run: sleep 15
-
-      - name: Create PR
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: |
-          NOTES=$(cat release-notes.txt)
-          PR_URL=$(gh pr create \
-            --base main \
-            --head ${{ env.TEMP_BRANCH }} \
-            --title "chore(release): ${{ env.VERSION }}" \
-            --body "$NOTES")
-          echo "PR_URL=$PR_URL" >> $GITHUB_ENV
-
-      - name: Wait for PR registration
-        run: sleep 15
-
-      - name: Auto-merge PR after checks pass
-        if: success()
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: |
-          PR_NUMBER=$(gh pr view ${{ env.PR_URL }} --json number --jq '.number')
-          gh pr close $PR_NUMBER
-          sleep 5
-          gh pr reopen $PR_NUMBER
-          sleep 5
-          gh pr merge --squash --auto $PR_NUMBER
+      - name: Trigger PR creation workflow
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            await github.rest.repos.createDispatchEvent({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              event_type: 'create-release-pr',
+              client_payload: {
+                temp_branch: '${{ steps.commit_branch.outputs.temp_branch }}',
+                version: '${{ steps.determine_version.outputs.version }}'
+              }
+            })
