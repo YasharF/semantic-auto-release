@@ -44,6 +44,30 @@ npm install --save-dev @yasharf/semantic-auto-release
 3. **Confirm branch protection.** Require the two status contexts emitted by `release-status` (or update the job to match your naming). Squash merge must remain enabled because the workflow uses it when auto-merging the release PR.
 4. **Run a smoke test.** Trigger “Start Release” manually from the Actions tab. If semantic-release finds no new commits the workflow will exit early; otherwise it will open a release PR with the version bump and changelog changes.
 
+## Trigger the release workflow from your desktop
+
+When you want the exact same release flow but initiated locally, use the provided helper script. It simply invokes `start-release.yml` through the GitHub CLI—no duplicate logic, no additional prompts.
+
+Prerequisites:
+
+- [GitHub CLI](https://cli.github.com/) v2.52 or newer.
+- `gh auth login --scopes workflow` (one-time) so the CLI can trigger workflows on your behalf.
+
+Usage:
+
+```bash
+npm run release:remote
+```
+
+The script will:
+
+1. Detect the current repository and branch.
+2. Run `gh workflow run start-release.yml --ref <current-branch>`.
+3. Stream workflow progress with `gh run watch` until completion.
+4. Display the final status and a link to the workflow logs (including artifacts like release notes and PR URLs).
+
+Because the automation still executes in GitHub Actions, the results remain identical to a scheduled or manual run from the Actions UI.
+
 ## Release flow at a glance
 
 1. **`evaluate-release`** runs `semantic-release` in dry-run mode and captures the proposed version, release notes, and target branch. If nothing should ship, the workflow stops here.
