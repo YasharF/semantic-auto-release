@@ -162,7 +162,6 @@ jobs:
     env:
       VERSION: ${{ needs.prepare-release.outputs.version }}
       NOTES: ${{ needs.prepare-release.outputs.notes }}
-      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     permissions:
       contents: write
       packages: write
@@ -171,6 +170,8 @@ jobs:
     steps:
       - name: Wait for PR to merge (in case auto-merge needs time)
         id: await_merge
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           for attempt in {1..60}; do
             data=$(gh pr view ${{ needs.create-pr.outputs.pr_number }} \
@@ -200,13 +201,21 @@ jobs:
           node-version: "lts/*"
           registry-url: https://registry.npmjs.org/
 
+      - name: Ensure npm latest
+        run: npm install -g npm@latest
+
       - name: Install dependencies
         run: npm ci
+
+      - name: Run build (if present)
+        run: npm run build --if-present
 
       - name: Publish package via Trusted Publishing
         run: npm publish --provenance --access public
 
       - name: Create GitHub Release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           printf '%s\n' "$NOTES" > release-notes.out
           gh release create "v$VERSION" \
