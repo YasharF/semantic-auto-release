@@ -1,3 +1,12 @@
+## 3.1.0 - 2025-09-27
+
+# [3.1.0](https://github.com/YasharF/semantic-auto-release/compare/v3.0.0...v3.1.0) (2025-09-27)
+
+
+### Features
+
+* use a single variable for the changelog file name ([#191](https://github.com/YasharF/semantic-auto-release/issues/191)) ([89e4009](https://github.com/YasharF/semantic-auto-release/commit/89e4009caa1ecd2a952ae610a7db6baa273e8ba3))
+
 ## 3.0.0 - 2025-09-27
 
 # [3.0.0](https://github.com/YasharF/semantic-auto-release/compare/v2.0.0...v3.0.0) (2025-09-27)
