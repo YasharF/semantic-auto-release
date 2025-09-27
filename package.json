@@ -1,7 +1,7 @@
 {
   "name": "@yasharf/semantic-auto-release",
   "version": "3.1.1",
-  "description": "Automated release workflow for JavaScript/TypeScript projects using semantic-release, Conventional Commits, and changelog updates.",
+  "description": "Automated release workflow for JavaScript projects using semantic-release, Conventional Commits, and changelog updates.",
   "keywords": [
     "automation",
     "changelog",
@@ -53,8 +53,7 @@
     "mocha": "^11.7.2",
     "prettier": "^3.6.2",
     "prettier-plugin-sh": "^0.18.0",
-    "sinon": "^21.0.0",
-    "typescript": "^5.9.2"
+    "sinon": "^21.0.0"
   },
   "publishConfig": {
     "access": "public"

@@ -6,10 +6,6 @@ on:
   pull_request:
     branches: [main]
     types: [opened, edited, reopened, synchronize]
-  workflow_run:
-    workflows: ["Start Release"]
-    types:
-      - completed
 
 permissions:
   pull-requests: read

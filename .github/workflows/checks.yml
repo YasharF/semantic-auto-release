@@ -7,11 +7,6 @@ on:
         description: Git ref to check out.
         required: true
         type: string
-      node-version:
-        description: Node.js version range to install.
-        required: false
-        type: string
-        default: lts/*
 
 permissions:
   contents: read
@@ -30,7 +25,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v5
         with:
-          node-version: ${{ inputs.node-version }}
+          node-version: "lts/*"
           cache: npm
 
       - name: Install dependencies
@@ -61,7 +56,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v5
         with:
-          node-version: ${{ inputs.node-version }}
+          node-version: "lts/*"
           cache: npm
 
       - name: Install dependencies
