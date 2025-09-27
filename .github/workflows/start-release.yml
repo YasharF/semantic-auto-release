@@ -62,12 +62,15 @@ jobs:
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
+            const fs = require('fs');
+            const notes = fs.readFileSync('release-notes.txt', 'utf8');
             await github.rest.repos.createDispatchEvent({
               owner: context.repo.owner,
               repo: context.repo.repo,
               event_type: 'create-release-pr',
               client_payload: {
                 temp_branch: '${{ steps.commit_branch.outputs.temp_branch }}',
-                version: '${{ steps.determine_version.outputs.version }}'
+                version: '${{ steps.determine_version.outputs.version }}',
+                notes: notes
               }
             })

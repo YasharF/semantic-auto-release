@@ -22,10 +22,9 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          NOTES=$(cat release-notes.txt)
           PR_URL=$(gh pr create \
             --base main \
             --head ${{ github.event.client_payload.temp_branch }} \
             --title "chore(release): ${{ github.event.client_payload.version }}" \
-            --body "$NOTES")
+            --body "${{ github.event.client_payload.notes }}")
           echo "PR_URL=$PR_URL" >> $GITHUB_ENV
