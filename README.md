@@ -411,8 +411,6 @@ The workflow mutates the repo according to the scenario, captures `step1..step6`
 
 Released under [BSD-3](LICENSE).
 
----
-
 ## Limitations & Deferred Features (v1)
 
 The following capability / diagnostic features are intentionally deferred to a later version:
