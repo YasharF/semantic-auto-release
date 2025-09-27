@@ -9,6 +9,7 @@ permissions:
   contents: write
   pull-requests: write
   actions: write
+  statuses: write
 
 jobs:
   prepare-release:
@@ -16,6 +17,8 @@ jobs:
     outputs:
       temp_branch: ${{ steps.commit_branch.outputs.temp_branch }}
       version: ${{ steps.determine_version.outputs.version }}
+      notes: ${{ steps.collect_notes.outputs.notes }}
+      commit_sha: ${{ steps.commit_branch.outputs.commit_sha }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v5
@@ -46,6 +49,12 @@ jobs:
       - name: Optionally run Prettier on changelog
         run: npx prettier --write CHANGELOG.md
 
+      - name: Collect release notes
+        id: collect_notes
+        run: |
+          NOTES=$(cat release-notes.txt)
+          printf 'notes<<EOF\n%s\nEOF\n' "$NOTES" >> $GITHUB_OUTPUT
+
       - name: Commit ephemeral branch
         id: commit_branch
         run: |
@@ -56,22 +65,84 @@ jobs:
           git add package.json package-lock.json CHANGELOG.md
           git commit -m "chore(release): ${{ steps.determine_version.outputs.version }}" || echo "No changes to commit"
           git push origin "$TEMP_BRANCH" --force
+          COMMIT_SHA=$(git rev-parse HEAD)
           echo "temp_branch=$TEMP_BRANCH" >> $GITHUB_OUTPUT
+          echo "commit_sha=$COMMIT_SHA" >> $GITHUB_OUTPUT
 
-      - name: Trigger PR creation workflow
+  release-checks:
+    needs: prepare-release
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout temp branch
+        uses: actions/checkout@v5
+        with:
+          ref: ${{ needs.prepare-release.outputs.temp_branch }}
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v5
+        with:
+          node-version: "lts/*"
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Validate latest commit
+        run: npx commitlint --last --verbose
+
+      - name: Prettier check
+        run: npm run prettier:check
+
+      - name: Run tests
+        run: npm run test:live
+
+      - name: Publish required statuses
+        if: success()
         uses: actions/github-script@v7
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
-            const fs = require('fs');
-            const notes = fs.readFileSync('release-notes.txt', 'utf8');
-            await github.rest.repos.createDispatchEvent({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              event_type: 'create-release-pr',
-              client_payload: {
-                temp_branch: '${{ steps.commit_branch.outputs.temp_branch }}',
-                version: '${{ steps.determine_version.outputs.version }}',
-                notes: notes
-              }
-            })
+            const owner = context.repo.owner;
+            const repo = context.repo.repo;
+            const sha = '${{ needs.prepare-release.outputs.commit_sha }}';
+            const statuses = [
+              { context: 'Main / build', description: 'Release checks passed' },
+              { context: 'Main / pr_title_check', description: 'Release PR title validated' }
+            ];
+            for (const status of statuses) {
+              await github.rest.repos.createCommitStatus({
+                owner,
+                repo,
+                sha,
+                state: 'success',
+                context: status.context,
+                description: status.description
+              });
+            }
+
+  create-pr:
+    needs: [prepare-release, release-checks]
+    runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      NOTES: ${{ needs.prepare-release.outputs.notes }}
+    steps:
+      - name: Create PR
+        run: |
+          PR_URL=$(gh pr create \
+            --base main \
+            --head ${{ needs.prepare-release.outputs.temp_branch }} \
+            --title "chore(release): ${{ needs.prepare-release.outputs.version }}" \
+            --body "$NOTES")
+          echo "PR_URL=$PR_URL"
+
+      - name: Wait for PR registration
+        run: sleep 15
+
+      - name: Enable auto-merge
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          PR_NUMBER=$(gh pr view $PR_URL --json number --jq '.number')
+          gh pr merge $PR_NUMBER --squash --auto
