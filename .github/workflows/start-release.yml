@@ -55,10 +55,10 @@ jobs:
           echo "TEMP_BRANCH=$TEMP_BRANCH" >> $GITHUB_ENV
 
       - name: Create PR
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: |
           NOTES=$(cat release-notes.txt)
-          env:
-            GH_TOKEN: ${{ github.token }}
           PR_URL=$(gh pr create \
             --base main \
             --head ${{ env.TEMP_BRANCH }} \
