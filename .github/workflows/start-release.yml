@@ -149,8 +149,7 @@ jobs:
                 repo,
                 run_id: runId,
                 per_page: 100,
-              },
-              (response) => response.data.jobs
+              }
             );
             core.info(`Jobs for workflow run ${runId}:`);
             if (!jobs.length) {
