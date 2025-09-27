@@ -1,9 +1,12 @@
 const fs = require("fs");
 const sinon = require("sinon");
 const { expect } = require("chai");
-const { verifyConditions, generateNotes } = require("../plugins/export-data");
+const {
+  verifyConditions,
+  generateNotes,
+} = require("../plugins/export-release-data");
 
-describe("plugins/export-data", function () {
+describe("plugins/export-release-data", function () {
   let writeFileSyncStub;
   beforeEach(function () {
     writeFileSyncStub = sinon.stub(fs, "writeFileSync");

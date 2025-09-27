@@ -1,0 +1,66 @@
+name: Start Release
+
+on:
+  schedule:
+    - cron: "0 0 1 * *" # 1st of each month at midnight
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  create-pr:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+
+      - name: Install Node.js
+        uses: actions/setup-node@v5
+        with:
+          node-version: LTS/*
+
+      - name: Determine release version
+        run: |
+          npx semantic-release --no-ci --dry-run --extends ./release.config.js
+          echo "VERSION=$(cat version.txt)" >> $GITHUB_ENV
+
+      - name: Update package.json version
+        run: node ./scripts/update-packagejson-ver.js ${{ env.VERSION }}
+
+      - name: Update changelog
+        run: node ./scripts/write-changes-md.js ${{ env.VERSION }} CHANGELOG.md
+        # If the repo owner uses CHANGES.md or another file instead,
+        # they should edit this line accordingly.
+
+      - name: Optionally run Prettier on changelog
+        run: npx prettier --write CHANGELOG.md
+        # Repo owner can comment this step out if they don’t want formatting.
+
+      - name: Commit ephemeral branch
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          TEMP_BRANCH="temp_release_${GITHUB_RUN_ID}_${GITHUB_RUN_NUMBER}"
+          git checkout -b "$TEMP_BRANCH"
+          git add package.json package-lock.json CHANGELOG.md
+          git commit -m "chore(release): ${VERSION}" || echo "No changes to commit"
+          git push origin "$TEMP_BRANCH" --force
+          echo "TEMP_BRANCH=$TEMP_BRANCH" >> $GITHUB_ENV
+
+      - name: Create PR
+        run: |
+          NOTES=$(cat release-notes.txt)
+          PR_URL=$(gh pr create \
+            --base main \
+            --head ${{ env.TEMP_BRANCH }} \
+            --title "chore(release): ${{ env.VERSION }}" \
+            --body "$NOTES")
+          echo "PR_URL=$PR_URL" >> $GITHUB_ENV
+
+      - name: Auto-merge PR after checks pass
+        if: success()
+        run: |
+          PR_NUMBER=$(gh pr view ${{ env.PR_URL }} --json number --jq '.number')
+          gh pr merge --squash --auto $PR_NUMBER

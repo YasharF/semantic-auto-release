@@ -11,6 +11,6 @@
     "skipLibCheck": true,
     "resolveJsonModule": true
   },
-  "include": ["src/**/*"],
+  "include": ["src/**/*", "scripts/write-changes-md.js", "scripts/update-version.js"],
   "exclude": ["node_modules", "dist", "legacy", "test"]
 }

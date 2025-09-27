@@ -4,7 +4,7 @@ const path = require("path");
 
 const version = process.argv[2];
 if (!version) {
-  console.error("Usage: update-version.js <version>");
+  console.error("Usage: update-packagejson-ver.js <version>");
   process.exit(1);
 }
 

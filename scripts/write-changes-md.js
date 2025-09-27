@@ -2,14 +2,14 @@
 const fs = require("fs");
 const path = require("path");
 
-const [, , version, notesFile] = process.argv;
-if (!version || !notesFile) {
-  console.error("Usage: write-changes-md.js <version> <notesFile>");
+const [, , version, changelogFile] = process.argv;
+if (!version || !changelogFile) {
+  console.error("Usage: write-changes-md.js <version> <changelogFile>");
   process.exit(1);
 }
 
-const notesPath = path.resolve(process.cwd(), notesFile);
-const changesPath = path.resolve(process.cwd(), "CHANGES.md");
+const notesPath = path.resolve(process.cwd(), "release-notes.txt");
+const changesPath = path.resolve(process.cwd(), changelogFile);
 
 const notes = fs.readFileSync(notesPath, "utf8");
 const date = new Date().toISOString().split("T")[0];
@@ -20,4 +20,4 @@ if (fs.existsSync(changesPath)) {
 }
 
 fs.writeFileSync(changesPath, changelog);
-console.log(`CHANGES.md updated for version ${version}`);
+console.log(`${changelogFile} updated for version ${version}`);

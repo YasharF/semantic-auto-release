@@ -6,7 +6,7 @@ function exportData(name, value) {
     fs.writeFileSync("version.txt", value);
   }
   if (name === "new-release-notes") {
-    fs.writeFileSync("notes.md", value);
+    fs.writeFileSync("release-notes.txt", value);
   }
   if (name === "branch-name") {
     fs.writeFileSync("branch.txt", value);

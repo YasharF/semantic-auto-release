@@ -4,7 +4,7 @@ const sinon = require("sinon");
 const { expect } = require("chai");
 const { execSync, spawnSync } = require("child_process");
 
-describe("scripts/update-version.js", function () {
+describe("scripts/update-packagejson-ver.js", function () {
   const pkgFile = path.resolve("package.json");
   const lockFile = path.resolve("package-lock.json");
   let pkgBackup, lockBackup;
