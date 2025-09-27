@@ -73,7 +73,7 @@ jobs:
         run: npm run prettier:check
 
       - name: Run tests
-        run: npm test:live
+        run: npm run test:live
 
   dependabot-automerge:
     name: Dependabot Automerge
