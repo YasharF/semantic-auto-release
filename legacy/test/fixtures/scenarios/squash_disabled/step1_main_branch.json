@@ -1,0 +1,12 @@
+{
+  "PAT_ADMIN": {
+    "status_code": 200,
+    "data": {
+      "default_branch": "main",
+      "private": false,
+      "allow_auto_merge": true,
+      "allow_squash_merge": false,
+      "permissions": { "admin": true, "push": true }
+    }
+  }
+}

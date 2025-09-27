@@ -1,0 +1,12 @@
+{
+  "PAT_READ": {
+    "status_code": 200,
+    "data": {
+      "default_branch": "main",
+      "private": true,
+      "allow_auto_merge": false,
+      "allow_squash_merge": true,
+      "permissions": { "admin": false, "push": false }
+    }
+  }
+}

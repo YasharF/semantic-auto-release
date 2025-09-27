@@ -23,38 +23,29 @@
   "exports": {
     "./commitlint": "./commitlint.config.js",
     "./release": "./release.config.js",
-    "./conventional-commits": "./.husky/commit-msg",
-    "./run-release": "./scripts/run-release.sh"
+    "./conventional-commits": "./.husky/commit-msg"
   },
-  "main": "index.js",
+  "main": "dist/index.js",
   "files": [
-    "scripts/setup.js",
-    ".github/workflow/lint_pr.yml",
-    ".github/workflows/ci_auto_release.yml",
-    ".github/workflows/semantic_auto_release.yml",
-    ".husky/commit-msg",
+    "dist/**/*",
     "commitlint.config.js",
     "release.config.js",
-    "scripts/run-release.sh",
-    "scripts/write-changes-md.js",
-    "scripts/update-version.js",
-    "plugins/export-data.js"
+    "plugins/export-release-data.js"
   ],
   "scripts": {
     "prepare": "husky",
-    "prettier:check": "prettier --check **/*.{js,md,yml,sh} .github/*",
-    "prettier:write": "prettier --write **/*.{js,md,yml,sh} .github/*",
-    "test": "npm run test:unit && npm run test:integration",
-    "test:integration": "mocha --require sinon --recursive \"test/*.integration.test.js\"",
-    "test:unit": "mocha --require sinon --recursive \"test/*.test.js\" --exclude \"test/*.integration.test.js\""
+    "prettier:check": "prettier --check \"**/*.{js,ts,md,yml,sh}\" .github/*",
+    "prettier:write": "prettier --write \"**/*.{js,ts,md,yml,sh}\" .github/*",
+    "test": "mocha --require sinon 'test/**/*.test.js'",
+    "test:live": "mocha --require sinon 'test/**/*.integration.test.js'"
   },
   "lint-staged": {
     "**/*.{js,yml,md,sh}": "prettier --check",
     ".github/*": "prettier --check"
   },
   "dependencies": {
-    "@commitlint/cli": "^19.8.1",
-    "@commitlint/config-conventional": "^19.8.1",
+    "@commitlint/cli": "^20.0.0",
+    "@commitlint/config-conventional": "^20.0.0",
     "@semantic-release/commit-analyzer": "^13.0.1",
     "@semantic-release/release-notes-generator": "^14.1.0",
     "semantic-release": "^24.2.9"
@@ -62,11 +53,12 @@
   "devDependencies": {
     "chai": "^6.0.1",
     "husky": "^9.1.7",
-    "lint-staged": "^16.1.6",
+    "lint-staged": "^16.2.1",
     "mocha": "^11.7.2",
     "prettier": "^3.6.2",
     "prettier-plugin-sh": "^0.18.0",
-    "sinon": "^21.0.0"
+    "sinon": "^21.0.0",
+    "typescript": "^5.9.2"
   },
   "publishConfig": {
     "access": "public"

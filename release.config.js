@@ -9,7 +9,7 @@ const basePlugins = [
 ];
 
 if (step === "create_release_files") {
-  basePlugins.push("./plugins/export-data.js");
+  basePlugins.push("./plugins/export-release-data.js");
 }
 
 module.exports = {

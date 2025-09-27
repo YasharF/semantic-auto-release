@@ -1,0 +1,40 @@
+{
+  "PAT_ADMIN": {
+    "endpoint": "https://api.github.com/repos/YasharF/semantic-auto-release/collaborators/YasharF/permission",
+    "status_code": 200,
+    "ok": true,
+    "data": {
+      "permission": "admin",
+      "user": {
+        "login": "YasharF",
+        "id": 6448697,
+        "node_id": "MDQ6VXNlcjY0NDg2OTc=",
+        "avatar_url": "https://avatars.githubusercontent.com/u/6448697?v=4",
+        "gravatar_id": "",
+        "url": "https://api.github.com/users/YasharF",
+        "html_url": "https://github.com/YasharF",
+        "followers_url": "https://api.github.com/users/YasharF/followers",
+        "following_url": "https://api.github.com/users/YasharF/following{/other_user}",
+        "gists_url": "https://api.github.com/users/YasharF/gists{/gist_id}",
+        "starred_url": "https://api.github.com/users/YasharF/starred{/owner}{/repo}",
+        "subscriptions_url": "https://api.github.com/users/YasharF/subscriptions",
+        "organizations_url": "https://api.github.com/users/YasharF/orgs",
+        "repos_url": "https://api.github.com/users/YasharF/repos",
+        "events_url": "https://api.github.com/users/YasharF/events{/privacy}",
+        "received_events_url": "https://api.github.com/users/YasharF/received_events",
+        "type": "User",
+        "user_view_type": "public",
+        "site_admin": false,
+        "permissions": {
+          "admin": true,
+          "maintain": true,
+          "push": true,
+          "triage": true,
+          "pull": true
+        },
+        "role_name": "admin"
+      },
+      "role_name": "admin"
+    }
+  }
+}
