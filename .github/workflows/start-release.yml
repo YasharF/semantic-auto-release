@@ -149,11 +149,25 @@ jobs:
           echo "pr_url=$PR_URL" >> $GITHUB_OUTPUT
           echo "pr_number=$PR_NUMBER" >> $GITHUB_OUTPUT
 
-      - name: Enable auto-merge
+      - name: Wait for PR registration
+        run: sleep 15
+
+      - name: Merge PR (auto when needed)
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          gh pr merge ${{ steps.create.outputs.pr_number }} --squash --auto
+          set +e
+          gh pr merge ${{ steps.create.outputs.pr_number }} \
+            --repo "$GITHUB_REPOSITORY" \
+            --squash --auto
+          rc=$?
+          set -e
+          if [ $rc -ne 0 ]; then
+            echo "Auto-merge could not be enabled; attempting to merge."
+            gh pr merge ${{ steps.create.outputs.pr_number }} \
+              --repo "$GITHUB_REPOSITORY" \
+              --squash --delete-branch
+          fi
 
   publish:
     needs: [prepare-release, release-checks, create-pr]
@@ -163,7 +177,7 @@ jobs:
       NOTES: ${{ needs.prepare-release.outputs.notes }}
       GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     steps:
-      - name: Wait for PR to merge
+      - name: Wait for PR to merge (in case if we set auto-merge)
         run: |
           for attempt in {1..60}; do
             data=$(gh pr view ${{ needs.create-pr.outputs.pr_number }} \
