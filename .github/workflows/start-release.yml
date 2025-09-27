@@ -169,18 +169,68 @@ jobs:
             const owner = context.repo.owner;
             const repo = context.repo.repo;
             const sha = '${{ needs.stage-release.outputs.commit_sha }}';
-            const statuses = [
-              { context: 'Checks / Build & Commit Checks', description: 'succeeded' },
-              { context: 'Checks / PR Title Check', description: 'succeeded' }
-            ];
-            for (const status of statuses) {
+            const runId = context.runId ?? process.env.GITHUB_RUN_ID;
+
+            const jobs = await github.paginate(
+              github.rest.actions.listJobsForWorkflowRun,
+              {
+                owner,
+                repo,
+                run_id: runId,
+                per_page: 100,
+              }
+            );
+
+            const checksJobs = jobs.filter(
+              (job) => typeof job?.name === 'string' && job.name.startsWith('Checks')
+            );
+
+            if (!checksJobs.length) {
+              core.warning('No reusable "Checks" jobs found when computing commit statuses.');
+            }
+
+            const toState = (job) => {
+              if (!job) return 'error';
+              if (job.status && job.status !== 'completed') {
+                return 'pending';
+              }
+              switch (job.conclusion) {
+                case 'success':
+                case 'skipped':
+                case 'neutral':
+                  return 'success';
+                case 'failure':
+                case 'timed_out':
+                case 'action_required':
+                case 'startup_failure':
+                case 'stale':
+                  return 'failure';
+                case 'cancelled':
+                  return 'error';
+                default:
+                  return 'error';
+              }
+            };
+
+            const formatDescription = (job, state) => {
+              if (!job) return 'Unable to locate reusable Checks job';
+              if (state === 'pending') return 'Run still in progress';
+              const conclusion = job.conclusion ?? job.status ?? 'unknown';
+              return `Run ${conclusion}`;
+            };
+
+            for (const job of checksJobs) {
+              const state = toState(job);
+              const contextLabel = job.name;
+              const description = formatDescription(job, state);
+              core.info(`Publishing status for ${contextLabel}: ${state}`);
               await github.rest.repos.createCommitStatus({
                 owner,
                 repo,
                 sha,
-                state: 'success',
-                context: status.context,
-                description: status.description
+                state,
+                context: contextLabel,
+                description,
               });
             }
 
