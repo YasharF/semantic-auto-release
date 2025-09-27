@@ -137,7 +137,8 @@ jobs:
             --head ${{ needs.prepare-release.outputs.temp_branch }} \
             --title "chore(release): ${{ needs.prepare-release.outputs.version }}" \
             --body "$NOTES")
-          echo "PR_URL=$PR_URL"
+          echo "PR_URL=$PR_URL" >> $GITHUB_ENV
+          echo "Created $PR_URL"
 
       - name: Wait for PR registration
         run: sleep 15
