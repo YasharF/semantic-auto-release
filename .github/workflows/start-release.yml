@@ -134,6 +134,18 @@ jobs:
       checks: read
       actions: read
     steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+
+      - name: Install Node.js
+        uses: actions/setup-node@v5
+        with:
+          node-version: "lts/*"
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
       - name: Replicate check statuses to the branch for the PR checks
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
