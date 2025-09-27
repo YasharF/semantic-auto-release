@@ -5,6 +5,9 @@ on:
     - cron: "0 0 1 * *"
   workflow_dispatch:
 
+env:
+  CHANGELOG_FILE: CHANGES.md
+
 permissions:
   contents: write
   pull-requests: write
@@ -46,10 +49,10 @@ jobs:
         run: node ./scripts/update-packagejson-ver.js ${{ steps.determine_version.outputs.version }}
 
       - name: Update changelog
-        run: node ./scripts/write-changes-md.js ${{ steps.determine_version.outputs.version }} CHANGES.md
+        run: node ./scripts/write-changes-md.js ${{ steps.determine_version.outputs.version }} "${{ env.CHANGELOG_FILE }}"
 
       - name: Optionally run Prettier on changelog
-        run: npx prettier --write CHANGES.md
+        run: npx prettier --write "${{ env.CHANGELOG_FILE }}"
 
       - name: Collect release notes
         id: collect_notes
@@ -64,7 +67,7 @@ jobs:
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           TEMP_BRANCH="temp_release_${GITHUB_RUN_ID}_${GITHUB_RUN_NUMBER}"
           git checkout -b "$TEMP_BRANCH"
-          git add package.json package-lock.json CHANGES.md
+          git add package.json package-lock.json "${{ env.CHANGELOG_FILE }}"
           git commit -m "chore(release): ${{ steps.determine_version.outputs.version }}" || echo "No changes to commit"
           git push origin "$TEMP_BRANCH" --force
           COMMIT_SHA=$(git rev-parse HEAD)
@@ -177,7 +180,7 @@ jobs:
       NOTES: ${{ needs.prepare-release.outputs.notes }}
       GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     steps:
-      - name: Wait for PR to merge (in case if we set auto-merge)
+      - name: Wait for PR to merge (in case auto-merge needs time)
         run: |
           for attempt in {1..60}; do
             data=$(gh pr view ${{ needs.create-pr.outputs.pr_number }} \
