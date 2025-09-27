@@ -19,7 +19,7 @@ jobs:
       - name: Install Node.js
         uses: actions/setup-node@v5
         with:
-          node-version: LTS/*
+          node-version: "lts/*"
 
       - name: Determine release version
         run: |

@@ -23,7 +23,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v5
         with:
-          node-version: LTS/*
+          node-version: "lts/*"
           registry-url: https://registry.npmjs.org/
 
       - name: Install dependencies
