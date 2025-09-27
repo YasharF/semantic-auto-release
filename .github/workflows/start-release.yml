@@ -46,10 +46,10 @@ jobs:
         run: node ./scripts/update-packagejson-ver.js ${{ steps.determine_version.outputs.version }}
 
       - name: Update changelog
-        run: node ./scripts/write-changes-md.js ${{ steps.determine_version.outputs.version }} CHANGELOG.md
+        run: node ./scripts/write-changes-md.js ${{ steps.determine_version.outputs.version }} CHANGES.md
 
       - name: Optionally run Prettier on changelog
-        run: npx prettier --write CHANGELOG.md
+        run: npx prettier --write CHANGES.md
 
       - name: Collect release notes
         id: collect_notes
@@ -64,7 +64,7 @@ jobs:
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           TEMP_BRANCH="temp_release_${GITHUB_RUN_ID}_${GITHUB_RUN_NUMBER}"
           git checkout -b "$TEMP_BRANCH"
-          git add package.json package-lock.json CHANGELOG.md
+          git add package.json package-lock.json CHANGES.md
           git commit -m "chore(release): ${{ steps.determine_version.outputs.version }}" || echo "No changes to commit"
           git push origin "$TEMP_BRANCH" --force
           COMMIT_SHA=$(git rev-parse HEAD)
@@ -139,14 +139,12 @@ jobs:
       - name: Create PR
         id: create
         run: |
-          PR_JSON=$(gh pr create \
+          PR_URL=$(gh pr create \
             --base main \
             --head ${{ needs.prepare-release.outputs.temp_branch }} \
             --title "chore(release): ${{ needs.prepare-release.outputs.version }}" \
-            --body "$NOTES" \
-            --json number,url)
-          PR_NUMBER=$(echo "$PR_JSON" | jq -r '.number')
-          PR_URL=$(echo "$PR_JSON" | jq -r '.url')
+            --body "$NOTES")
+          PR_NUMBER=$(gh pr view "$PR_URL" --json number --jq '.number')
           echo "Created $PR_URL"
           echo "pr_url=$PR_URL" >> $GITHUB_OUTPUT
           echo "pr_number=$PR_NUMBER" >> $GITHUB_OUTPUT
