@@ -10,6 +10,8 @@ permissions:
   pull-requests: write
   actions: write
   statuses: write
+  packages: write
+  id-token: write
 
 jobs:
   prepare-release:
@@ -107,8 +109,8 @@ jobs:
             const repo = context.repo.repo;
             const sha = '${{ needs.prepare-release.outputs.commit_sha }}';
             const statuses = [
-              { context: 'Build & Commit Checks', description: 'succeeded ' },
-              { context: 'PR Title Check', description: 'succeeded' }
+              { context: 'Main / build',        description: 'Release checks passed' },
+              { context: 'Main / pr_title_check', description: 'Release PR title validated' }
             ];
             for (const status of statuses) {
               await github.rest.repos.createCommitStatus({
@@ -124,28 +126,84 @@ jobs:
   create-pr:
     needs: [prepare-release, release-checks]
     runs-on: ubuntu-latest
+    outputs:
+      pr_url: ${{ steps.create.outputs.pr_url }}
+      pr_number: ${{ steps.create.outputs.pr_number }}
     env:
-      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       NOTES: ${{ needs.prepare-release.outputs.notes }}
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v5
+
       - name: Create PR
+        id: create
         run: |
-          PR_URL=$(gh pr create \
+          PR_JSON=$(gh pr create \
             --base main \
             --head ${{ needs.prepare-release.outputs.temp_branch }} \
             --title "chore(release): ${{ needs.prepare-release.outputs.version }}" \
-            --body "$NOTES")
-          echo "PR_URL=$PR_URL" >> $GITHUB_ENV
+            --body "$NOTES" \
+            --json number,url)
+          PR_NUMBER=$(echo "$PR_JSON" | jq -r '.number')
+          PR_URL=$(echo "$PR_JSON" | jq -r '.url')
           echo "Created $PR_URL"
-
-      - name: Wait for PR registration
-        run: sleep 15
+          echo "pr_url=$PR_URL" >> $GITHUB_OUTPUT
+          echo "pr_number=$PR_NUMBER" >> $GITHUB_OUTPUT
 
       - name: Enable auto-merge
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          PR_NUMBER=$(gh pr view $PR_URL --json number --jq '.number')
-          gh pr merge $PR_NUMBER --squash --auto
+          gh pr merge ${{ steps.create.outputs.pr_number }} --squash --auto
+
+  publish:
+    needs: [prepare-release, release-checks, create-pr]
+    runs-on: ubuntu-latest
+    env:
+      VERSION: ${{ needs.prepare-release.outputs.version }}
+      NOTES: ${{ needs.prepare-release.outputs.notes }}
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    steps:
+      - name: Wait for PR to merge
+        run: |
+          for attempt in {1..60}; do
+            data=$(gh pr view ${{ needs.create-pr.outputs.pr_number }} --json state,mergeCommit --jq '{state: .state, sha: .mergeCommit.oid}')
+            state=$(echo "$data" | jq -r '.state')
+            sha=$(echo "$data" | jq -r '.sha')
+            if [ "$state" = "MERGED" ] && [ "$sha" != "null" ]; then
+              echo "MERGED_COMMIT=$sha" >> $GITHUB_ENV
+              exit 0
+            fi
+            sleep 10
+          done
+          echo "PR did not merge within the expected time." >&2
+          exit 1
+
+      - name: Checkout merge commit
+        uses: actions/checkout@v5
+        with:
+          ref: ${{ env.MERGED_COMMIT }}
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v5
+        with:
+          node-version: "lts/*"
+          registry-url: https://registry.npmjs.org/
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build package
+        run: npm run build
+
+      - name: Publish package via Trusted Publishing
+        run: npm publish --provenance --access public
+
+      - name: Create GitHub Release
+        run: |
+          printf '%s\n' "$NOTES" > release-notes.out
+          gh release create "v$VERSION" \
+            --title "v$VERSION" \
+            --notes-file release-notes.out
