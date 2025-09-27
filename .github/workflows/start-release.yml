@@ -17,10 +17,9 @@ jobs:
     permissions:
       contents: write
     outputs:
-      temp_branch: ${{ steps.commit_branch.outputs.temp_branch }}
       version: ${{ steps.determine_version.outputs.version }}
-      notes: ${{ steps.collect_notes.outputs.notes }}
-      commit_sha: ${{ steps.commit_branch.outputs.commit_sha }}
+      notes: ${{ steps.capture_release_notes.outputs.notes }}
+      base_branch: ${{ steps.capture_branch.outputs.base_branch }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v5
@@ -29,6 +28,7 @@ jobs:
         uses: actions/setup-node@v5
         with:
           node-version: "lts/*"
+          cache: npm
 
       - name: Install dependencies
         run: npm ci
@@ -39,14 +39,60 @@ jobs:
           release_step: create_release_files
         run: |
           npx semantic-release --no-ci --dry-run --extends ./release.config.js
-          VERSION=$(cat version.txt)
-          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          if [ -f version.txt ]; then
+            VERSION=$(cat version.txt)
+            echo "version=$VERSION" >> $GITHUB_OUTPUT
+          else
+            echo "No release required; skipping remaining steps." >&2
+            echo "version=" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Capture release notes
+        id: capture_release_notes
+        if: steps.determine_version.outputs.version != ''
+        run: |
+          NOTES=$(cat release-notes.txt)
+          printf 'notes<<EOF\n%s\nEOF\n' "$NOTES" >> $GITHUB_OUTPUT
+
+      - name: Capture base branch
+        id: capture_branch
+        if: steps.determine_version.outputs.version != ''
+        run: |
+          BASE_BRANCH=$(cat branch.txt)
+          echo "base_branch=$BASE_BRANCH" >> $GITHUB_OUTPUT
+
+  stage-release:
+    runs-on: ubuntu-latest
+    needs: prepare-release
+    if: needs.prepare-release.outputs.version != ''
+    permissions:
+      contents: write
+    outputs:
+      temp_branch: ${{ steps.commit_branch.outputs.temp_branch }}
+      notes: ${{ steps.collect_notes.outputs.notes }}
+      commit_sha: ${{ steps.commit_branch.outputs.commit_sha }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+
+      - name: Install Node.js
+        uses: actions/setup-node@v5
+        with:
+          node-version: "lts/*"
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Restore release notes file
+        run: |
+          printf '%s' "${{ needs.prepare-release.outputs.notes }}" > release-notes.txt
 
       - name: Update package.json version
-        run: node ./scripts/update-packagejson-ver.js ${{ steps.determine_version.outputs.version }}
+        run: node ./scripts/update-packagejson-ver.js ${{ needs.prepare-release.outputs.version }}
 
       - name: Update changelog
-        run: node ./scripts/write-changes-md.js ${{ steps.determine_version.outputs.version }} "${{ env.CHANGELOG_FILE }}"
+        run: node ./scripts/write-changes-md.js ${{ needs.prepare-release.outputs.version }} "${{ env.CHANGELOG_FILE }}"
 
       - name: Optionally run Prettier on changelog
         run: npx prettier --write "${{ env.CHANGELOG_FILE }}"
@@ -65,7 +111,7 @@ jobs:
           TEMP_BRANCH="temp_release_${GITHUB_RUN_ID}_${GITHUB_RUN_NUMBER}"
           git checkout -b "$TEMP_BRANCH"
           git add package.json package-lock.json "${{ env.CHANGELOG_FILE }}"
-          git commit -m "chore(release): ${{ steps.determine_version.outputs.version }}" || echo "No changes to commit"
+          git commit -m "chore(release): ${{ needs.prepare-release.outputs.version }}" || echo "No changes to commit"
           git push origin "$TEMP_BRANCH" --force
           COMMIT_SHA=$(git rev-parse HEAD)
           echo "temp_branch=$TEMP_BRANCH" >> $GITHUB_OUTPUT
@@ -73,13 +119,15 @@ jobs:
 
   release-checks:
     name: Checks
-    needs: prepare-release
+    needs: [prepare-release, stage-release]
+    if: needs.prepare-release.outputs.version != ''
     uses: ./.github/workflows/checks.yml
     with:
-      ref: ${{ needs.prepare-release.outputs.temp_branch }}
+      ref: ${{ needs.stage-release.outputs.temp_branch }}
 
   release-status:
-    needs: [prepare-release, release-checks]
+    needs: [prepare-release, stage-release, release-checks]
+    if: needs.prepare-release.outputs.version != ''
     runs-on: ubuntu-latest
     permissions:
       statuses: write
@@ -91,7 +139,7 @@ jobs:
           script: |
             const owner = context.repo.owner;
             const repo = context.repo.repo;
-            const sha = '${{ needs.prepare-release.outputs.commit_sha }}';
+            const sha = '${{ needs.stage-release.outputs.commit_sha }}';
             const statuses = [
               { context: 'Checks / Build & Commit Checks', description: 'succeeded' },
               { context: 'Checks / PR Title Check', description: 'succeeded' }
@@ -108,13 +156,14 @@ jobs:
             }
 
   create-pr:
-    needs: [prepare-release, release-status]
+    needs: [prepare-release, stage-release, release-status]
+    if: needs.prepare-release.outputs.version != ''
     runs-on: ubuntu-latest
     outputs:
       pr_url: ${{ steps.create.outputs.pr_url }}
       pr_number: ${{ steps.create.outputs.pr_number }}
     env:
-      NOTES: ${{ needs.prepare-release.outputs.notes }}
+      NOTES: ${{ needs.stage-release.outputs.notes }}
       GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     permissions:
       contents: write
@@ -127,8 +176,8 @@ jobs:
         id: create
         run: |
           PR_URL=$(gh pr create \
-            --base main \
-            --head ${{ needs.prepare-release.outputs.temp_branch }} \
+            --base ${{ needs.prepare-release.outputs.base_branch }} \
+            --head ${{ needs.stage-release.outputs.temp_branch }} \
             --title "chore(release): ${{ needs.prepare-release.outputs.version }}" \
             --body "$NOTES")
           PR_NUMBER=$(gh pr view "$PR_URL" --json number --jq '.number')
@@ -157,11 +206,12 @@ jobs:
           fi
 
   publish:
-    needs: [prepare-release, release-status, create-pr]
+    needs: [prepare-release, stage-release, release-status, create-pr]
+    if: needs.prepare-release.outputs.version != ''
     runs-on: ubuntu-latest
     env:
       VERSION: ${{ needs.prepare-release.outputs.version }}
-      NOTES: ${{ needs.prepare-release.outputs.notes }}
+      NOTES: ${{ needs.stage-release.outputs.notes }}
     permissions:
       contents: write
       packages: write
@@ -200,6 +250,7 @@ jobs:
         with:
           node-version: "lts/*"
           registry-url: https://registry.npmjs.org/
+          cache: npm
 
       - name: Ensure npm latest
         run: npm install -g npm@latest
