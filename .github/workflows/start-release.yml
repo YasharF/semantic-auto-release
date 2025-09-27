@@ -127,7 +127,7 @@ jobs:
           echo "commit_sha=$COMMIT_SHA" >> $GITHUB_OUTPUT
 
   release-checks:
-    name: Run Checks on the Release Branch
+    name: Checks
     needs: [evaluate-release, stage-release]
     if: needs.evaluate-release.outputs.version != ''
     uses: ./.github/workflows/checks.yml
