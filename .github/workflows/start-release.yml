@@ -131,7 +131,33 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       statuses: write
+      checks: read
     steps:
+      - name: Log check run results
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const owner = context.repo.owner;
+            const repo = context.repo.repo;
+            const sha = '${{ needs.stage-release.outputs.commit_sha }}';
+            const runs = await github.paginate(
+              github.rest.checks.listForRef,
+              {
+                owner,
+                repo,
+                ref: sha,
+                per_page: 100,
+              }
+            );
+            core.info(`Check runs for ${sha}:`);
+            if (!runs.length) {
+              core.info('- none');
+            }
+            for (const run of runs) {
+              core.info(`- ${run.name ?? 'unknown'} :: status=${run.status} conclusion=${run.conclusion}`);
+            }
+
       - name: Publish required statuses
         uses: actions/github-script@v7
         with:

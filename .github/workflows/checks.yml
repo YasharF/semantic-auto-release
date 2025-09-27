@@ -67,3 +67,10 @@ jobs:
           PR_TITLE: ${{ github.event.pull_request.title }}
         run: |
           echo "$PR_TITLE" | npx commitlint --verbose
+
+  dummy_delay:
+    name: Dummy Delay Check
+    runs-on: ubuntu-latest
+    steps:
+      - name: Wait 10 seconds
+        run: sleep 10
