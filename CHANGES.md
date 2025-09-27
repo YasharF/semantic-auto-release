@@ -1,21 +1,3 @@
-## 3.2.0 - 2025-09-27
-
-# [3.2.0](https://github.com/YasharF/semantic-auto-release/compare/v3.1.1...v3.2.0) (2025-09-27)
-
-
-### Bug Fixes
-
-* api output log ([#206](https://github.com/YasharF/semantic-auto-release/issues/206)) ([6d9e64f](https://github.com/YasharF/semantic-auto-release/commit/6d9e64fa2b6a147c01aaa30ebff34f241b5dbd30))
-* api parsing issue ([#207](https://github.com/YasharF/semantic-auto-release/issues/207)) ([fe654a0](https://github.com/YasharF/semantic-auto-release/commit/fe654a0206999635d7eb30c0848eaf1d5cf8746a))
-* api parsing issue ([#208](https://github.com/YasharF/semantic-auto-release/issues/208)) ([70205e3](https://github.com/YasharF/semantic-auto-release/commit/70205e33f862e62a788be3315d400c1c29139d65))
-
-
-### Features
-
-* dynamic checks extraction ([#210](https://github.com/YasharF/semantic-auto-release/issues/210)) ([335c747](https://github.com/YasharF/semantic-auto-release/commit/335c747a2d26aa1502f4b36a420485d4239184fb))
-* get the commit status checks ([#203](https://github.com/YasharF/semantic-auto-release/issues/203)) ([74967af](https://github.com/YasharF/semantic-auto-release/commit/74967af38de4aef623c71f879d79c64d0d058404))
-* get the job statuses ([#205](https://github.com/YasharF/semantic-auto-release/issues/205)) ([eace17c](https://github.com/YasharF/semantic-auto-release/commit/eace17c845c6097face291d275485b9199ab4c09))
-
 ## 3.1.1 - 2025-09-27
 
 ## [3.1.1](https://github.com/YasharF/semantic-auto-release/compare/v3.1.0...v3.1.1) (2025-09-27)
