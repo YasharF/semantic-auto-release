@@ -160,7 +160,6 @@ jobs:
               core.info(`- ${label}`);
               core.info(`  raw: ${JSON.stringify(job, null, 2)}`);
             });
-            }
 
       - name: Publish required statuses
         uses: actions/github-script@v7
