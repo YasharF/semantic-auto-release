@@ -156,8 +156,11 @@ jobs:
             if (!jobs.length) {
               core.info('- none');
             }
-            for (const job of jobs) {
-              core.info(`- ${job.name ?? 'unknown'} :: status=${job.status} conclusion=${job.conclusion}`);
+            jobs.forEach((job, index) => {
+              const label = job && typeof job === 'object' ? job.name ?? `index ${index}` : `index ${index}`;
+              core.info(`- ${label}`);
+              core.info(`  raw: ${JSON.stringify(job, null, 2)}`);
+            });
             }
 
       - name: Publish required statuses
