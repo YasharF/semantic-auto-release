@@ -54,6 +54,9 @@ jobs:
           git push origin "$TEMP_BRANCH" --force
           echo "TEMP_BRANCH=$TEMP_BRANCH" >> $GITHUB_ENV
 
+      - name: Wait for branch registration
+        run: sleep 15
+
       - name: Create PR
         env:
           GH_TOKEN: ${{ github.token }}
@@ -65,6 +68,9 @@ jobs:
             --title "chore(release): ${{ env.VERSION }}" \
             --body "$NOTES")
           echo "PR_URL=$PR_URL" >> $GITHUB_ENV
+
+      - name: Wait for PR registration
+        run: sleep 15
 
       - name: Auto-merge PR after checks pass
         if: success()
