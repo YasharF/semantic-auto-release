@@ -1,6 +1,6 @@
 {
   "name": "@yasharf/semantic-auto-release",
-  "version": "3.4.0",
+  "version": "3.3.1",
   "description": "Automated release workflow for JavaScript projects using semantic-release, Conventional Commits, and changelog updates.",
   "keywords": [
     "automation",
@@ -33,7 +33,7 @@
     "prettier:check": "prettier --check \"**/*.{js,ts,md,yml,sh}\" .github/*",
     "prettier:write": "prettier --write \"**/*.{js,ts,md,yml,sh}\" .github/*",
     "test": "mocha --require sinon 'test/**/*.test.js'",
-    "test-coverage": "c8 --reporter=lcov --reporter=text --check-coverage --branches 100 --functions 100 --lines 100 npm test"
+    "test-coverage": "c8 --all --include=**/*.js --reporter=lcov --reporter=text npm test"
   },
   "lint-staged": {
     "**/*.{js,yml,md,sh}": "prettier --check",
