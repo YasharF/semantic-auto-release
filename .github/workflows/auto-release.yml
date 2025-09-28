@@ -362,9 +362,9 @@ jobs:
             echo "       git fetch origin"
             echo "       git reset --hard origin/${BASE_BRANCH:-main}"
             echo "  2. Fetch the merged commit produced by the release PR:"
-            echo "       git fetch origin"
             echo "       MERGE_SHA=\$(gh pr view $PR_NUMBER --repo \"$GITHUB_REPOSITORY\" --json mergeCommit --jq '.mergeCommit.oid')"
             echo "       git checkout \"\$MERGE_SHA\""
+            echo "       (Git will report you're in a 'detached HEAD' state; that's expected while publishing from this commit.)"
             echo "       git status --short"
             echo "  3. Install dependencies and rebuild (if needed):"
             echo "       npm ci"
@@ -372,20 +372,24 @@ jobs:
             echo "  4. Publish the package from the merge commit:"
             echo "       npm publish"
             echo "     If the command exits with an error stating the version already exists, note that the publish already happened and proceed to the next step."
-            echo "  5. Save the release notes below or from the PR description into a local file (i.e. release-notes.out) and create the GitHub release:"
-            echo "       gh release create \"v$RELEASE_VERSION\" --title \"v$RELEASE_VERSION\" --notes-file release-notes.out"
+            echo "  5. Create the release notes file and GitHub release:"
+            echo "       cat <<'EOF' > release-notes.out"
             if [ -n "$RELEASE_NOTES" ]; then
-              echo
-              echo "----- Release notes (for release-notes.out) -----"
-              printf '%s\n' "$RELEASE_NOTES"
-              echo "----------------------------------"
+              printf '%s\n' "$RELEASE_NOTES" | while IFS= read -r line; do printf '       %s\n' "$line"; done
+            else
+              echo "       # Add release notes content here"
             fi
+            echo "       EOF"
+            echo
+            echo "       gh release create \"v$RELEASE_VERSION\" --title \"v$RELEASE_VERSION\" --notes-file release-notes.out"
             echo
             echo "  6. Switch back to ${BASE_BRANCH:-main} and verify the branch is up to date:"
             echo "       git checkout ${BASE_BRANCH:-main}"
             echo "       git pull"
             if [ -n "$TEMP_BRANCH" ]; then
-              echo "  7. Confirm the temporary branch ($TEMP_BRANCH) is deleted in GitHub (it should have been removed automatically)."
+              echo "  7. Remove the temporary branch from GitHub (fails if it's already gone):"
+              echo "       git push origin --delete $TEMP_BRANCH"
+              echo "     If the command reports that the branch doesn't exist, it was already deleted."
             fi
             echo
             echo "After confirming npm and the GitHub release are correct, announce the release as usual."
