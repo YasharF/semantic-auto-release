@@ -285,7 +285,7 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          retry_limit="${PR_MERGE_RETRY_ATTEMPTS}"
+          retry_limit="${PR_MERGE_STATUS_RETRIES}"
           for attempt in $(seq 1 "$retry_limit"); do
             data=$(gh pr view ${{ needs.create-pr.outputs.pr_number }} \
               --repo "$GITHUB_REPOSITORY" \

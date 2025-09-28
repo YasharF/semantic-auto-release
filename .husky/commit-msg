@@ -1,3 +1,5 @@
 echo "🔍 Checking commit message format (Conventional Commits enforced)"
+echo
 echo "💥 Reminder: For breaking changes, include 'BREAKING CHANGE:' in the footer (last line) of the commit message to trigger major version bumps."
+echo
 npx --no-install commitlint --edit "$1"
