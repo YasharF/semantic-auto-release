@@ -32,6 +32,8 @@ jobs:
       base_branch: ${{ steps.capture_branch.outputs.base_branch }}
       evaluated_sha: ${{ steps.capture_sha.outputs.evaluated_sha }}
       semantic_release_log: ${{ steps.determine_version.outputs.semantic_release_log }}
+      changelog_contains_version: ${{ steps.determine_version.outputs.changelog_contains_version }}
+      duplicate_version: ${{ steps.determine_version.outputs.duplicate_version }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v5
@@ -58,8 +60,22 @@ jobs:
             exit $status
           fi
 
+          echo "changelog_contains_version=false" >> $GITHUB_OUTPUT
+          echo "duplicate_version=" >> $GITHUB_OUTPUT
+
           if [ -f version.txt ]; then
             VERSION=$(cat version.txt)
+            check_status=0
+            node ./scripts/check-changelog-version.js "$VERSION" "${CHANGELOG_FILE}" || check_status=$?
+            if [ "${check_status:-0}" -eq 2 ]; then
+              echo "Detected existing changelog entry for $VERSION in ${CHANGELOG_FILE}; skipping release creation."
+              echo "changelog_contains_version=true" >> $GITHUB_OUTPUT
+              echo "duplicate_version=$VERSION" >> $GITHUB_OUTPUT
+              echo "version=" >> $GITHUB_OUTPUT
+              exit 0
+            elif [ "${check_status:-0}" -ne 0 ]; then
+              exit ${check_status}
+            fi
             echo "version=$VERSION" >> $GITHUB_OUTPUT
           else
             echo "No release required; skipping remaining steps." >&2
@@ -259,7 +275,7 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          retry_limit="${PR_MERGE_RETRY_ATTEMPTS:-60}"
+          retry_limit="${PR_MERGE_RETRY_ATTEMPTS}"
           for attempt in $(seq 1 "$retry_limit"); do
             data=$(gh pr view ${{ needs.create-pr.outputs.pr_number }} \
               --repo "$GITHUB_REPOSITORY" \
@@ -335,12 +351,31 @@ jobs:
       CREATE_PR_RESULT: ${{ needs.create-pr.result }}
       PUBLISH_RESULT: ${{ needs.publish.result }}
       SEMANTIC_RELEASE_LOG: ${{ needs.evaluate-release.outputs.semantic_release_log }}
+      CHANGELOG_DUPLICATE: ${{ needs.evaluate-release.outputs.changelog_contains_version }}
+      DUPLICATE_VERSION: ${{ needs.evaluate-release.outputs.duplicate_version }}
     steps:
       - name: To Do
         run: |
           set -eo pipefail
 
           if [ -z "$RELEASE_VERSION" ]; then
+            if [ "$CHANGELOG_DUPLICATE" = "true" ]; then
+              if [ -n "$DUPLICATE_VERSION" ]; then
+                echo "${CHANGELOG_FILE} already contains an entry for version $DUPLICATE_VERSION, but no release artifacts were published."
+              else
+                echo "${CHANGELOG_FILE} already contains the next release entry, but no release artifacts were published."
+              fi
+              echo "A previous workflow likely merged the changelog without completing the publish step."
+              echo "Investigate the last successful release PR and confirm whether npm and GitHub contain version ${DUPLICATE_VERSION:-<unknown>}."
+              echo "If they do not, publish that version manually to npm and create the matching GitHub release."
+              echo "If they do, remove or adjust the duplicate changelog entry before re-running the workflow."
+              if [ -n "$SEMANTIC_RELEASE_LOG" ]; then
+                echo
+                printf '%s\n' "$SEMANTIC_RELEASE_LOG"
+              fi
+              exit 1
+            fi
+
             if [ -n "$SEMANTIC_RELEASE_LOG" ]; then
               printf '%s\n' "$SEMANTIC_RELEASE_LOG"
             else
@@ -357,10 +392,10 @@ jobs:
             echo "The release PR ($PR_URL) merged, but the Publish job did not finish."
             echo
             echo "To finish publishing v$RELEASE_VERSION manually:"
-            echo "  1. Ensure your local ${BASE_BRANCH:-main} matches origin/${BASE_BRANCH:-main}:"
-            echo "       git checkout ${BASE_BRANCH:-main}"
+            echo "  1. Ensure your local ${BASE_BRANCH} matches origin/${BASE_BRANCH}:"
+            echo "       git checkout ${BASE_BRANCH}"
             echo "       git fetch origin"
-            echo "       git reset --hard origin/${BASE_BRANCH:-main}"
+            echo "       git reset --hard origin/${BASE_BRANCH}"
             echo "  2. Fetch the merged commit produced by the release PR:"
             echo "       MERGE_SHA=\$(gh pr view $PR_NUMBER --repo \"$GITHUB_REPOSITORY\" --json mergeCommit --jq '.mergeCommit.oid')"
             echo "       git checkout \"\$MERGE_SHA\""
@@ -383,8 +418,8 @@ jobs:
             echo
             echo "       gh release create \"v$RELEASE_VERSION\" --title \"v$RELEASE_VERSION\" --notes-file release-notes.out"
             echo
-            echo "  6. Switch back to ${BASE_BRANCH:-main} and verify the branch is up to date:"
-            echo "       git checkout ${BASE_BRANCH:-main}"
+            echo "  6. Switch back to ${BASE_BRANCH} and verify the branch is up to date:"
+            echo "       git checkout ${BASE_BRANCH}"
             echo "       git pull"
             if [ -n "$TEMP_BRANCH" ]; then
               echo "  7. Remove the temporary branch from GitHub (fails if it's already gone):"
