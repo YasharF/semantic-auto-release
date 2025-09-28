@@ -311,7 +311,7 @@ jobs:
             --notes-file release-notes.out
 
   final_check:
-    name: Check Outcome
+    name: Error Check
     needs:
       - evaluate-release
       - stage-release
@@ -336,15 +336,13 @@ jobs:
       PUBLISH_RESULT: ${{ needs.publish.result }}
       SEMANTIC_RELEASE_LOG: ${{ needs.evaluate-release.outputs.semantic_release_log }}
     steps:
-      - name: Summarize outcome
+      - name: To Do
         run: |
           set -eo pipefail
 
           if [ -z "$RELEASE_VERSION" ]; then
             if [ -n "$SEMANTIC_RELEASE_LOG" ]; then
-              echo "::group::semantic-release output"
               printf '%s\n' "$SEMANTIC_RELEASE_LOG"
-              echo "::endgroup::"
             else
               echo "Semantic-release output was not captured; review the Evaluate Release job logs."
             fi
@@ -354,9 +352,6 @@ jobs:
           if [ "$PUBLISH_RESULT" = "success" ]; then
             exit 0
           fi
-
-          echo
-          echo "::group::Next steps"
 
           if [ "$CREATE_PR_RESULT" = "success" ] && [ -n "$PR_NUMBER" ]; then
             echo "The release PR ($PR_URL) merged, but the Publish job did not finish."
@@ -414,5 +409,3 @@ jobs:
             fi
             echo "Once fixes are in place, re-run the Start Release workflow."
           fi
-
-          echo "::endgroup::"
