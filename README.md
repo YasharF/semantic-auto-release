@@ -4,10 +4,10 @@ Automated semantic-release for repositories that must ship through protected bra
 
 ## Why teams use it
 
-- **PR-first releases** – every release is proposed as a pull request so protected branches stay locked down.
-- **Changelog + version bumps included** – `package.json`, `package-lock.json`, and `CHANGES.md` stay in sync on every run.
-- **Tokenless npm publish** – leverages GitHub's OIDC integration with npm provenance; no long-lived secrets to rotate.
-- **Reusable quality gate** – a shared checks workflow runs commitlint, formatting, and integration tests before anything merges.
+- **Changelog + version bumps included** – `package.json`, `package-lock.json`, and `CHANGES.md` (configurable) stay in sync for each release when the repo has branch protection with required PRs and checks enabled.
+- **Tokenless publish** – leverages GitHub's OIDC integration with npm provenance, and the built-in workflow token; no need for adding a secret to the repo. No need for personal access tokens (PAT).
+- **Safeguards and quality gates** – Git hooks, shared tests and checks during the lifecycle (local dev and github action runs).
+- **Maintenance** - They don't have to keep up with the housekeeping of all of the related packages.
 
 ## What's in the box
 
@@ -17,17 +17,18 @@ Automated semantic-release for repositories that must ship through protected bra
 - `scripts/update-packagejson-ver.js` and `scripts/write-changes-md.js` – helper scripts used in staging to bump versions and prepend changelog notes.
 - `commitlint.config.js` and `./conventional-commits` helper – easy Husky integration for Conventional Commits enforcement.
 
-> The workflows in this repository double as our own dogfood environment. Feel free to copy and adapt them—just swap in your project's build/test steps where ours run `npm run test:live`.
+> The workflows in this repository double as our own dog food environment. Feel free to copy and adapt them—just swap in your project's build/test steps where ours run `npm run test:live`.
 
 ## Prerequisites
 
+- You can have your workflow run tests and checks in any environment that github workflows support (i.e. windows, etc), however for the build and release tasks only bash/linux is currently supported.
+- You are using npm. Yarn, pnpm, and monorepos are currently unsupported
+
 Before enabling the workflow make sure:
 
-- Your project uses (or is ready to adopt) [Conventional Commits](https://www.conventionalcommits.org/).
-- Branch protection on your default branch requires pull requests and status checks.
-- **Settings → Actions → General → Workflow permissions** has “Allow GitHub Actions to create and approve pull requests” enabled.
-- npm provenance is enabled for your package (npm: Package → Settings → Provenance → “Set up with GitHub”).
-- The required status checks on the default branch include the contexts emitted by this workflow (`Checks / Build & Commit Checks` and `Checks / PR Title Check` by default).
+- Your project uses (or is ready to adopt) [Conventional Commits](https://www.conventionalcommits.org/). You would need to do a manual release (Github and npm) prior to the first automated release.
+- **Repo Settings → Actions → General → Workflow permissions** is set to "Read and write permissions" and has "Allow GitHub Actions to create and approve pull requests" enabled.
+- You have a single workflow that when called runs all of your tests and checks.
 
 ## Install
 
@@ -39,7 +40,7 @@ npm install --save-dev @yasharf/semantic-auto-release
 
 ## Wire it up
 
-1. **Copy the reference workflows.** Drop `.github/workflows/auto-release.yml` and `.github/workflows/checks.yml` into your project. Adjust the schedule, node version, or test commands as needed. The staging job expects a changelog file named `CHANGES.md`; set `CHANGELOG_FILE` if you prefer a different file.
+1. **Copy the reference workflows.** Drop `.github/workflows/auto-release.yml` and `.github/workflows/checks.yml` into your project. Adjust the schedule, node version, or test commands as needed. The staging job expects a changelog file name such as `CHANGES.md`, `CHANGELOG_FILE` or another name. We are going to refer to the file as `CHANGES.md` in this document.
 2. **Hook up commitlint.** Either wire Husky's `commit-msg` hook to the provided `conventional-commits` script or integrate the exported `commitlint` config into your existing tooling so commits fail fast when they don't match the spec.
 3. **Confirm branch protection.** Require the two status contexts emitted by `release-status` (or update the job to match your naming). Squash merge must remain enabled because the workflow uses it when auto-merging the release PR.
 4. **Run a smoke test.** Trigger “Start Release” manually from the Actions tab. If semantic-release finds no new commits the workflow will exit early; otherwise it will open a release PR with the version bump and changelog changes.
@@ -65,7 +66,7 @@ semantic-auto-release relies on the default analyzers from `@semantic-release/co
 
 Tips:
 
-- Use the `BREAKING CHANGE:` footer (with a blank line before it) for majors; the `type!:` shorthand is intentionally ignored to reduce accidents.
+- Use the `BREAKING CHANGE:` footer for majors.
 - Tag your last manual release (e.g. `v1.0.0`) before adopting the automation so semantic-release has a base reference.
 - Consider adding a PR title check (the provided `Checks` workflow already does this) to catch non-conforming PR titles that might be copied into squash commits.
 
