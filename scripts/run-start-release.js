@@ -14,6 +14,10 @@ function createReleaseRunner({
   pollAttempts = 15,
   pollIntervalMs = 2000,
 } = {}) {
+  let scopeRefreshAttempted = false;
+  const WORKFLOW_PATH = ".github/workflows/start-release.yml";
+  const GH_API_ACCEPT_HEADER = "Accept: application/vnd.github+json";
+
   function run(cmd, args, options = {}) {
     const result = spawnSyncImpl(cmd, args, {
       stdio: options.stdio || "pipe",
@@ -104,21 +108,73 @@ function createReleaseRunner({
     }
   }
 
+  function handleWorkflowScopeError(error) {
+    const message = error?.message || "";
+    if (
+      /workflow scope/i.test(message) ||
+      /HTTP 403/.test(message) ||
+      /Resource not accessible/i.test(message)
+    ) {
+      const scopeError = new Error(
+        "GitHub CLI token is missing the `workflow` scope. Attempted to request it automatically. If the prompt was declined, run `gh auth refresh -h github.com -s workflow` manually and retry.",
+      );
+      scopeError.code = "MISSING_WORKFLOW_SCOPE";
+      return scopeError;
+    }
+    return error;
+  }
+
+  function requestWorkflowScope() {
+    if (scopeRefreshAttempted) {
+      return false;
+    }
+    scopeRefreshAttempted = true;
+    logger.log(
+      "Requesting GitHub CLI workflow scope (`gh auth refresh -h github.com -s workflow`)...",
+    );
+    try {
+      run("gh", ["auth", "refresh", "-h", "github.com", "-s", "workflow"], {
+        stdio: "inherit",
+      });
+      logger.log("Workflow scope added. Continuing...");
+      return true;
+    } catch (refreshError) {
+      logger.error("Automatic workflow scope request failed.");
+      logger.error(refreshError.message || refreshError);
+      throw new Error(
+        "Automatic attempt to grant workflow scope failed. Run `gh auth refresh -h github.com -s workflow` manually and retry.",
+      );
+    }
+  }
+
   function fetchLatestWorkflowRun(repo, ref) {
     const { owner, name } = parseRepo(repo);
-    const output = run("gh", [
-      "api",
-      `repos/${owner}/${name}/actions/workflows/start-release.yml/runs`,
-      "-f",
-      `per_page=1`,
-      "-f",
-      `branch=${ref}`,
-    ]);
+    let output;
+    try {
+      const query = `per_page=20&branch=${encodeURIComponent(ref)}`;
+      output = run("gh", [
+        "api",
+        `repos/${owner}/${name}/actions/runs?${query}`,
+        "-H",
+        GH_API_ACCEPT_HEADER,
+      ]);
+    } catch (error) {
+      const scopeError = handleWorkflowScopeError(error);
+      if (scopeError?.code === "MISSING_WORKFLOW_SCOPE") {
+        if (requestWorkflowScope()) {
+          return fetchLatestWorkflowRun(repo, ref);
+        }
+      }
+      throw scopeError;
+    }
     const data = JSON.parse(output);
     if (!data.workflow_runs || data.workflow_runs.length === 0) {
       return null;
     }
-    return data.workflow_runs[0];
+    const match = data.workflow_runs.find(
+      (runInfo) => runInfo.path === WORKFLOW_PATH,
+    );
+    return match || null;
   }
 
   async function waitForWorkflowRun(repo, ref, startedAt) {
@@ -132,8 +188,12 @@ function createReleaseRunner({
           }
         }
       } catch (error) {
+        if (error?.code === "MISSING_WORKFLOW_SCOPE") {
+          throw error;
+        }
+        const detail = error?.message ? ` ${error.message}` : "";
         logger.warn(
-          `Unable to fetch workflow run metadata (attempt ${attempt + 1}/${pollAttempts}).`,
+          `Unable to fetch workflow run metadata (attempt ${attempt + 1}/${pollAttempts}).${detail}`,
         );
       }
 
@@ -167,6 +227,8 @@ function createReleaseRunner({
       const summary = run("gh", [
         "api",
         `repos/${owner}/${name}/actions/runs/${runId}`,
+        "-H",
+        GH_API_ACCEPT_HEADER,
       ]);
       const data = JSON.parse(summary);
       return {
@@ -176,6 +238,13 @@ function createReleaseRunner({
         title: data.display_title,
       };
     } catch (error) {
+      const scopeError = handleWorkflowScopeError(error);
+      if (scopeError?.code === "MISSING_WORKFLOW_SCOPE") {
+        if (requestWorkflowScope()) {
+          return viewSummary(runId, repo);
+        }
+        throw scopeError;
+      }
       logger.warn(
         "Unable to fetch run summary. The workflow run may have been deleted.",
       );

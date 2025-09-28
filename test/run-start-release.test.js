@@ -40,6 +40,7 @@ describe("run-start-release", () => {
               conclusion: null,
               display_title: "Release",
               created_at: createdAt,
+              path: ".github/workflows/start-release.yml",
             },
           ],
         }),
@@ -114,11 +115,9 @@ describe("run-start-release", () => {
     expect(listRunCall.args[0]).to.equal("gh");
     expect(listRunCall.args[1]).to.deep.equal([
       "api",
-      "repos/owner/repo/actions/workflows/start-release.yml/runs",
-      "-f",
-      "per_page=1",
-      "-f",
-      "branch=main",
+      "repos/owner/repo/actions/runs?per_page=20&branch=main",
+      "-H",
+      "Accept: application/vnd.github+json",
     ]);
 
     const summaryCall = spawnSyncStub.getCall(6);
@@ -126,6 +125,8 @@ describe("run-start-release", () => {
     expect(summaryCall.args[1]).to.deep.equal([
       "api",
       "repos/owner/repo/actions/runs/321",
+      "-H",
+      "Accept: application/vnd.github+json",
     ]);
 
     const watchCall = spawnStub.getCall(0);
@@ -198,5 +199,168 @@ describe("run-start-release", () => {
     const summary = runner.viewSummary(123, "owner/repo");
     expect(summary).to.equal(null);
     expect(logger.warn.calledOnce).to.be.true;
+  });
+
+  it("automatically refreshes workflow scope when missing", async () => {
+    const createdAt = new Date().toISOString();
+    let runListAttempts = 0;
+
+    const spawnSyncStub = sinon.stub().callsFake((cmd, args, options = {}) => {
+      const command = `${cmd} ${args.join(" ")}`;
+      if (command === "gh --version") {
+        return { status: 0, stdout: "gh version" };
+      }
+      if (command.startsWith("gh auth status")) {
+        return { status: 0, stdout: "auth ok" };
+      }
+      if (command.startsWith("gh repo view")) {
+        return { status: 0, stdout: "owner/repo" };
+      }
+      if (command.startsWith("git rev-parse")) {
+        return { status: 0, stdout: "main" };
+      }
+      if (command.startsWith("gh workflow run")) {
+        return { status: 0, stdout: "" };
+      }
+      if (command.startsWith("gh api repos/owner/repo/actions/runs")) {
+        if (runListAttempts === 0) {
+          runListAttempts += 1;
+          return { status: 1, stderr: "HTTP 403: Must have workflow scope" };
+        }
+        return {
+          status: 0,
+          stdout: JSON.stringify({
+            workflow_runs: [
+              {
+                id: 321,
+                html_url: "https://example.com/run/321",
+                status: "queued",
+                conclusion: null,
+                display_title: "Release",
+                created_at: createdAt,
+                path: ".github/workflows/start-release.yml",
+              },
+            ],
+          }),
+        };
+      }
+      if (command.startsWith("gh auth refresh")) {
+        return { status: 0, stdout: "" };
+      }
+      if (command.startsWith("gh api repos/owner/repo/actions/runs/321")) {
+        return {
+          status: 0,
+          stdout: JSON.stringify({
+            status: "completed",
+            conclusion: "success",
+            html_url: "https://example.com/run/321",
+            display_title: "Release",
+          }),
+        };
+      }
+      throw new Error(`Unexpected command: ${command}`);
+    });
+
+    const watcher = new EventEmitter();
+    const spawnStub = sinon.stub().returns(watcher);
+
+    const logger = {
+      log: sinon.stub(),
+      error: sinon.stub(),
+      warn: sinon.stub(),
+    };
+    const exitStub = sinon.stub();
+
+    const runner = createReleaseRunner({
+      spawnSyncImpl: spawnSyncStub,
+      spawnImpl: spawnStub,
+      logger,
+      exit: exitStub,
+      pollAttempts: 1,
+    });
+
+    const execution = runner.execute();
+    setImmediate(() => {
+      watcher.emit("close", 0);
+    });
+    await execution;
+
+    expect(runListAttempts).to.equal(1);
+    expect(exitStub.called).to.be.false;
+
+    const logMessages = logger.log.getCalls().map((call) => call.args[0]);
+    expect(logMessages).to.include(
+      "Requesting GitHub CLI workflow scope (`gh auth refresh -h github.com -s workflow`)...",
+    );
+    expect(logMessages).to.include("Workflow scope added. Continuing...");
+
+    expect(spawnSyncStub.callCount).to.equal(9);
+  });
+
+  it("fails clearly when workflow scope refresh is declined", async () => {
+    let runListAttempts = 0;
+    const spawnSyncStub = sinon.stub().callsFake((cmd, args) => {
+      const command = `${cmd} ${args.join(" ")}`;
+      if (command === "gh --version") {
+        return { status: 0, stdout: "gh version" };
+      }
+      if (command.startsWith("gh auth status")) {
+        return { status: 0, stdout: "auth ok" };
+      }
+      if (command.startsWith("gh repo view")) {
+        return { status: 0, stdout: "owner/repo" };
+      }
+      if (command.startsWith("git rev-parse")) {
+        return { status: 0, stdout: "main" };
+      }
+      if (command.startsWith("gh workflow run")) {
+        return { status: 0, stdout: "" };
+      }
+      if (command.startsWith("gh api repos/owner/repo/actions/runs")) {
+        runListAttempts += 1;
+        return { status: 1, stderr: "HTTP 403: Must have workflow scope" };
+      }
+      if (command.startsWith("gh auth refresh")) {
+        return { status: 1, stderr: "refresh cancelled" };
+      }
+      throw new Error(`Unexpected command: ${command}`);
+    });
+
+    const logger = {
+      log: sinon.stub(),
+      error: sinon.stub(),
+      warn: sinon.stub(),
+    };
+    const exitStub = sinon.stub().throws(new Error("exit"));
+
+    const runner = createReleaseRunner({
+      spawnSyncImpl: spawnSyncStub,
+      spawnImpl: sinon.stub(),
+      logger,
+      exit: exitStub,
+      pollAttempts: 1,
+    });
+
+    let caught;
+    try {
+      await runner.execute();
+    } catch (error) {
+      caught = error;
+    }
+
+    expect(caught).to.be.instanceOf(Error);
+    expect(caught.message).to.equal("exit");
+    expect(exitStub.callCount).to.equal(1);
+    expect(exitStub.firstCall.args[0]).to.equal(1);
+
+    const errorMessages = logger.error.getCalls().map((call) => call.args[0]);
+    expect(errorMessages).to.include(
+      "Automatic workflow scope request failed.",
+    );
+    expect(
+      errorMessages.some((msg) => /Command failed: gh auth refresh/.test(msg)),
+    ).to.be.true;
+
+    expect(runListAttempts).to.equal(1);
   });
 });
