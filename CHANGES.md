@@ -1,3 +1,37 @@
+## 3.2.0 - 2025-09-28
+
+# [3.2.0](https://github.com/YasharF/semantic-auto-release/compare/v3.1.1...v3.2.0) (2025-09-28)
+
+
+### Bug Fixes
+
+* add missing node setup for release-status ([#213](https://github.com/YasharF/semantic-auto-release/issues/213)) ([d9373f3](https://github.com/YasharF/semantic-auto-release/commit/d9373f39690e13ffad6926c29c464dd858f44086))
+* adjust to do messaging ([#236](https://github.com/YasharF/semantic-auto-release/issues/236)) ([e30a310](https://github.com/YasharF/semantic-auto-release/commit/e30a310acb32ba50cfccdcfd5d241269b50ef551))
+* api output log ([#206](https://github.com/YasharF/semantic-auto-release/issues/206)) ([6d9e64f](https://github.com/YasharF/semantic-auto-release/commit/6d9e64fa2b6a147c01aaa30ebff34f241b5dbd30))
+* api parsing issue ([#207](https://github.com/YasharF/semantic-auto-release/issues/207)) ([fe654a0](https://github.com/YasharF/semantic-auto-release/commit/fe654a0206999635d7eb30c0848eaf1d5cf8746a))
+* api parsing issue ([#208](https://github.com/YasharF/semantic-auto-release/issues/208)) ([70205e3](https://github.com/YasharF/semantic-auto-release/commit/70205e33f862e62a788be3315d400c1c29139d65))
+* correct parsing of the octakit returned values ([1ca4a65](https://github.com/YasharF/semantic-auto-release/commit/1ca4a65b8e7485d52841919582170b7767335b34))
+* improved messaging ([fa3986d](https://github.com/YasharF/semantic-auto-release/commit/fa3986d981206bedf94c8c383bfdf05c8cf3a438))
+* race condition during release process ([#215](https://github.com/YasharF/semantic-auto-release/issues/215)) ([d9de458](https://github.com/YasharF/semantic-auto-release/commit/d9de45835ebcc1ab1bf5e4c40e4a3f9a7176cd88))
+* release-checks should be named Checks for string match later ([#217](https://github.com/YasharF/semantic-auto-release/issues/217)) ([6793e30](https://github.com/YasharF/semantic-auto-release/commit/6793e300f003adf62b7bde9d56e692660c3a13cc))
+* workflow status gathering ([e3735a8](https://github.com/YasharF/semantic-auto-release/commit/e3735a8600b36600ab3b80bba56fb42409657ccf))
+
+
+### Features
+
+* add next steps output if there was a failure ([#227](https://github.com/YasharF/semantic-auto-release/issues/227)) ([4a90924](https://github.com/YasharF/semantic-auto-release/commit/4a90924c71d12198cd53fcc881423f982c22444e))
+* add workflow info in the PR ([#219](https://github.com/YasharF/semantic-auto-release/issues/219)) ([f1a92f4](https://github.com/YasharF/semantic-auto-release/commit/f1a92f40734a2cf71fa8fd7edb98cf0d0f6180bf))
+* better messaging when a release is not going to be made ([#228](https://github.com/YasharF/semantic-auto-release/issues/228)) ([1f7305e](https://github.com/YasharF/semantic-auto-release/commit/1f7305e464221677b71d817ba53de2046f6beca5))
+* dynamic checks extraction ([#210](https://github.com/YasharF/semantic-auto-release/issues/210)) ([335c747](https://github.com/YasharF/semantic-auto-release/commit/335c747a2d26aa1502f4b36a420485d4239184fb))
+* enable prettier run on changelog to be optional ([#222](https://github.com/YasharF/semantic-auto-release/issues/222)) ([edf5a7b](https://github.com/YasharF/semantic-auto-release/commit/edf5a7b363c689739407e9ad5a560ccf39235901))
+* get the commit status checks ([#203](https://github.com/YasharF/semantic-auto-release/issues/203)) ([74967af](https://github.com/YasharF/semantic-auto-release/commit/74967af38de4aef623c71f879d79c64d0d058404))
+* get the job statuses ([#205](https://github.com/YasharF/semantic-auto-release/issues/205)) ([eace17c](https://github.com/YasharF/semantic-auto-release/commit/eace17c845c6097face291d275485b9199ab4c09))
+* locally trigger the workflow ([06b0187](https://github.com/YasharF/semantic-auto-release/commit/06b0187e708aa5f81dbf77700ded51a90f71b5e8))
+* move check/status scripts to a js file ([#212](https://github.com/YasharF/semantic-auto-release/issues/212)) ([bed05c2](https://github.com/YasharF/semantic-auto-release/commit/bed05c2ab299af145435a91eee6e6407bc3a2ea3))
+* remove extra verbose logging ([#226](https://github.com/YasharF/semantic-auto-release/issues/226)) ([f4146d6](https://github.com/YasharF/semantic-auto-release/commit/f4146d61a4f2bbbb2df89da92b2d91978b02953a))
+* remove local workflow calls to reduce complexity ([#229](https://github.com/YasharF/semantic-auto-release/issues/229)) ([ad5f3de](https://github.com/YasharF/semantic-auto-release/commit/ad5f3de9c81f6021bc7890a4205cde5b5bd63b34))
+* simplify final check output ([#230](https://github.com/YasharF/semantic-auto-release/issues/230)) ([d7c1f04](https://github.com/YasharF/semantic-auto-release/commit/d7c1f04a4be34e8dcae8083b4803be0fc9cf05ff))
+
 ## 3.2.0 - 2025-09-27
 
 # [3.2.0](https://github.com/YasharF/semantic-auto-release/compare/v3.1.1...v3.2.0) (2025-09-27)
