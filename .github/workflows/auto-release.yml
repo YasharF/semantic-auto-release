@@ -2,12 +2,8 @@ name: Auto Release
 
 on:
   schedule:
-    - cron: "0 0 1 * *"
+    - cron: "0 0 1 * *" # update this for your release cadence
   workflow_dispatch:
-
-concurrency:
-  group: auto-release-${{ github.ref }}
-  cancel-in-progress: false
 
 env:
   CHANGELOG_FILE: CHANGES.md
@@ -15,7 +11,21 @@ env:
 
   # Increase the retries if you have checks that take longer to run
   # and are not in checks.yml
-  PR_MERGE_STATUS_RETRIES: "60" # 10 sec sleep between status pulls
+  PR_MERGE_STATUS_RETRIES: 60 # 10 sec sleep between status pulls
+
+##############################################
+##############################################
+##############################################
+#   Don't make changes below this comment    #
+#   Future upgrade scripts may overwrite     #
+#   the lines below                          #
+##############################################
+##############################################
+##############################################
+
+concurrency:
+  group: auto-release-${{ github.ref }}
+  cancel-in-progress: false
 
 permissions:
   contents: read
