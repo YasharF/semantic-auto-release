@@ -143,20 +143,23 @@ async function publishStatus(
   });
 }
 
+function createOctokitClient(options) {
+  return new Octokit({
+    auth: options.token,
+    userAgent: "semantic-auto-release-script",
+    baseUrl: options.apiBase,
+  });
+}
+
 async function syncCheckStatuses({
   env = process.env,
   argv = process.argv,
   octokit,
+  createClient = createOctokitClient,
 } = {}) {
   const options = parseOptions(argv, env);
 
-  const client =
-    octokit ||
-    new Octokit({
-      auth: options.token,
-      userAgent: "semantic-auto-release-script",
-      baseUrl: options.apiBase,
-    });
+  const client = octokit || createClient(options);
 
   console.log(`Fetching jobs for workflow run ${options.runId}...`);
   const jobs = await listJobs(client, options);
@@ -195,9 +198,9 @@ async function syncCheckStatuses({
   };
 }
 
-async function runCli() {
+async function runCli({ sync = syncCheckStatuses } = {}) {
   try {
-    await syncCheckStatuses();
+    await sync();
   } catch (error) {
     console.error("Failed to publish commit statuses:");
     console.error(error.message || error);
@@ -205,6 +208,7 @@ async function runCli() {
   }
 }
 
+/* c8 ignore next 3 */
 if (require.main === module) {
   runCli();
 }
@@ -216,4 +220,6 @@ module.exports = {
   parseOptions,
   listJobs,
   publishStatus,
+  createOctokitClient,
+  runCli,
 };
