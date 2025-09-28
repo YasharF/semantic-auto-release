@@ -1,3 +1,12 @@
+## 3.4.0 - 2025-09-28
+
+# [3.4.0](https://github.com/YasharF/semantic-auto-release/compare/v3.3.1...v3.4.0) (2025-09-28)
+
+
+### Features
+
+* duplicate run protection ([ad13a7d](https://github.com/YasharF/semantic-auto-release/commit/ad13a7dee5408cbd209a2fc649e76ad52b692da1))
+
 ## 3.3.1 - 2025-09-28
 
 ## [3.3.1](https://github.com/YasharF/semantic-auto-release/compare/v3.3.0...v3.3.1) (2025-09-28)
