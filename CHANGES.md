@@ -1,3 +1,18 @@
+## 3.4.0 - 2025-09-28
+
+# [3.4.0](https://github.com/YasharF/semantic-auto-release/compare/v3.3.1...v3.4.0) (2025-09-28)
+
+
+### Bug Fixes
+
+* bug in workflow pr check retries ([892d922](https://github.com/YasharF/semantic-auto-release/commit/892d9229c675a30c238a1553b387385de6b8f847))
+* correct the retry variable ([#246](https://github.com/YasharF/semantic-auto-release/issues/246)) ([29bacc4](https://github.com/YasharF/semantic-auto-release/commit/29bacc4d6adf11dba083eed3c53f2882c6abeba6))
+
+
+### Features
+
+* duplicate run protection ([ad13a7d](https://github.com/YasharF/semantic-auto-release/commit/ad13a7dee5408cbd209a2fc649e76ad52b692da1))
+
 ## 3.3.1 - 2025-09-28
 
 ## [3.3.1](https://github.com/YasharF/semantic-auto-release/compare/v3.3.0...v3.3.1) (2025-09-28)
