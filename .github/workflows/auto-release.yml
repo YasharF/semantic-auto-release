@@ -1,4 +1,4 @@
-name: Auro Release
+name: Auto Release
 
 on:
   schedule:
@@ -211,7 +211,7 @@ jobs:
           echo "pr_url=$PR_URL" >> $GITHUB_OUTPUT
           echo "pr_number=$PR_NUMBER" >> $GITHUB_OUTPUT
 
-      - name: Wait for PR registration
+      - name: Wait for PR register
         run: sleep 15
 
       - name: Merge PR
