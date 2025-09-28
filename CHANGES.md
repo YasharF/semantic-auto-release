@@ -7,6 +7,15 @@
 
 * update manual instructions output ([847ee1e](https://github.com/YasharF/semantic-auto-release/commit/847ee1e1b21e1abd0ebbe77c6b88e77df0ab1793))
 
+## 3.3.1 - 2025-09-28
+
+## [3.3.1](https://github.com/YasharF/semantic-auto-release/compare/v3.3.0...v3.3.1) (2025-09-28)
+
+
+### Bug Fixes
+
+* update manual instructions output ([847ee1e](https://github.com/YasharF/semantic-auto-release/commit/847ee1e1b21e1abd0ebbe77c6b88e77df0ab1793))
+
 ## 3.3.0 - 2025-09-28
 
 # [3.3.0](https://github.com/YasharF/semantic-auto-release/compare/v3.2.0...v3.3.0) (2025-09-28)
