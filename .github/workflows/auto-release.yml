@@ -1,4 +1,4 @@
-name: Start Release
+name: Auro Release
 
 on:
   schedule:
@@ -6,7 +6,7 @@ on:
   workflow_dispatch:
 
 concurrency:
-  group: start-release-${{ github.ref }}
+  group: auto-release-${{ github.ref }}
   cancel-in-progress: false
 
 env:
@@ -195,7 +195,7 @@ jobs:
       contents: write
       pull-requests: write
     steps:
-      - name: Checkout repository
+      - name: Checkout repo
         uses: actions/checkout@v5
 
       - name: Create PR
@@ -214,7 +214,7 @@ jobs:
       - name: Wait for PR registration
         run: sleep 15
 
-      - name: Merge PR (auto when needed)
+      - name: Merge PR
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
@@ -372,14 +372,13 @@ jobs:
             echo "  4. Publish the package from the merge commit:"
             echo "       npm publish"
             echo "     If the command exits with an error stating the version already exists, note that the publish already happened and proceed to the next step."
-            echo "  5. Save the release notes from the PR description into a local file (for example, release-notes.out) and create the GitHub release:"
+            echo "  5. Save the release notes below or from the PR description into a local file (i.e. release-notes.out) and create the GitHub release:"
             echo "       gh release create \"v$RELEASE_VERSION\" --title \"v$RELEASE_VERSION\" --notes-file release-notes.out"
             if [ -n "$RELEASE_NOTES" ]; then
               echo
-              echo "----- Suggested release notes -----"
+              echo "----- Release notes (for release-notes.out) -----"
               printf '%s\n' "$RELEASE_NOTES"
               echo "----------------------------------"
-              echo "(Copy the block above into release-notes.out if you need a starting point.)"
             fi
             echo
             echo "  6. Switch back to ${BASE_BRANCH:-main} and verify the branch is up to date:"
@@ -401,11 +400,10 @@ jobs:
             printf '  - Publish: %s\n' "$PUBLISH_RESULT"
             echo
             if [ "$CREATE_PR_RESULT" = "success" ] && [ -n "$PR_NUMBER" ]; then
-              echo "An open release PR exists at $PR_URL. Resolve the failing jobs, then close the PR without merging."
+              echo "An open release PR exists at $PR_URL. Resolve the failing jobs, then close the PR without merging and delete the related temp branch."
             fi
             if [ "$STAGE_RESULT" = "success" ] && [ -n "$TEMP_BRANCH" ]; then
-              echo "The temporary branch ($TEMP_BRANCH) is still in the repository. Delete it after investigation:"
-              echo "       git push origin --delete $TEMP_BRANCH"
+              echo "The temporary branch ($TEMP_BRANCH) is still in the repository. Delete it after your investigation."
             fi
-            echo "Once fixes are in place, re-run the Start Release workflow."
+            echo "Once fixes are in place, re-run the auto release workflow."
           fi

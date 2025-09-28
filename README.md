@@ -11,7 +11,7 @@ Automated semantic-release for repositories that must ship through protected bra
 
 ## What's in the box
 
-- `.github/workflows/start-release.yml` – orchestrates the release flow (evaluate → stage → checks → PR → publish).
+- `.github/workflows/auto-release.yml` – orchestrates the release flow (evaluate → stage → checks → PR → publish).
 - `.github/workflows/checks.yml` – reusable workflow for commitlint + formatting + integration tests.
 - `release.config.js` and `plugins/export-release-data.js` – semantic-release configuration that exports the next version, release notes, and base branch for later jobs.
 - `scripts/update-packagejson-ver.js` and `scripts/write-changes-md.js` – helper scripts used in staging to bump versions and prepend changelog notes.
@@ -39,7 +39,7 @@ npm install --save-dev @yasharf/semantic-auto-release
 
 ## Wire it up
 
-1. **Copy the reference workflows.** Drop `.github/workflows/start-release.yml` and `.github/workflows/checks.yml` into your project. Adjust the schedule, node version, or test commands as needed. The staging job expects a changelog file named `CHANGES.md`; set `CHANGELOG_FILE` if you prefer a different file.
+1. **Copy the reference workflows.** Drop `.github/workflows/auto-release.yml` and `.github/workflows/checks.yml` into your project. Adjust the schedule, node version, or test commands as needed. The staging job expects a changelog file named `CHANGES.md`; set `CHANGELOG_FILE` if you prefer a different file.
 2. **Hook up commitlint.** Either wire Husky's `commit-msg` hook to the provided `conventional-commits` script or integrate the exported `commitlint` config into your existing tooling so commits fail fast when they don't match the spec.
 3. **Confirm branch protection.** Require the two status contexts emitted by `release-status` (or update the job to match your naming). Squash merge must remain enabled because the workflow uses it when auto-merging the release PR.
 4. **Run a smoke test.** Trigger “Start Release” manually from the Actions tab. If semantic-release finds no new commits the workflow will exit early; otherwise it will open a release PR with the version bump and changelog changes.
@@ -71,7 +71,7 @@ Tips:
 
 ## Customizing the workflow
 
-- **Different changelog file?** Update the `CHANGELOG_FILE` environment variable in `start-release.yml` or remove the changelog step entirely if you don't keep one.
+- **Different changelog file?** Update the `CHANGELOG_FILE` environment variable in `auto-release.yml` or remove the changelog step entirely if you don't keep one.
 - **No Prettier?** Comment out or delete the “Optionally run Prettier on changelog” step.
 - **Additional validation?** Add steps to `checks.yml` or pass a different workflow reference into `release-checks`.
 - **Multi-package repo?** The current scripts assume a single package. For workspaces you can replace the helper scripts with equivalents that update the right manifests before committing.
