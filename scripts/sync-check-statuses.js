@@ -160,18 +160,13 @@ async function syncCheckStatuses({
 
   console.log(`Fetching jobs for workflow run ${options.runId}...`);
   const jobs = await listJobs(client, options);
-  console.log(`Jobs for workflow run ${options.runId}:`);
-  if (!jobs.length) {
-    console.log("- none");
+  if (jobs.length === 0) {
+    console.log(`No jobs found for workflow run ${options.runId}.`);
+  } else {
+    console.log(
+      `Found ${jobs.length} job${jobs.length === 1 ? "" : "s"} for workflow run ${options.runId}.`,
+    );
   }
-  jobs.forEach((job, index) => {
-    const label =
-      job && typeof job === "object"
-        ? (job.name ?? `index ${index}`)
-        : `index ${index}`;
-    console.log(`- ${label}`);
-    console.log(`  raw: ${JSON.stringify(job, null, 2)}`);
-  });
   const matching = jobs.filter(
     (job) => typeof job?.name === "string" && job.name.startsWith("Checks"),
   );
