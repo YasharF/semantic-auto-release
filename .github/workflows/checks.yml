@@ -13,7 +13,7 @@ permissions:
 
 jobs:
   checks:
-    name: Build & Commit Checks
+    name: Tests and Validations
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
@@ -42,8 +42,8 @@ jobs:
       - name: Prettier check
         run: npm run prettier:check
 
-      - name: Run tests
-        run: npm run test:live
+      - name: Run tests with coverage check
+        run: npm run test-coverage
 
   pr_title:
     name: PR Title Check
