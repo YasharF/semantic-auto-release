@@ -33,8 +33,7 @@
     "prettier:check": "prettier --check \"**/*.{js,ts,md,yml,sh}\" .github/*",
     "prettier:write": "prettier --write \"**/*.{js,ts,md,yml,sh}\" .github/*",
     "test": "mocha --require sinon 'test/**/*.test.js'",
-    "test:live": "mocha --require sinon 'test/**/*.integration.test.js'",
-    "release:remote": "node ./scripts/run-start-release.js"
+    "test:live": "mocha --require sinon 'test/**/*.integration.test.js'"
   },
   "lint-staged": {
     "**/*.{js,yml,md,sh}": "prettier --check",
