@@ -5,9 +5,17 @@ on:
     - cron: "0 0 1 * *"
   workflow_dispatch:
 
+concurrency:
+  group: start-release-${{ github.ref }}
+  cancel-in-progress: false
+
 env:
   CHANGELOG_FILE: CHANGES.md
   PRETTIER_CHANGELOG: "true"
+
+  # Increase the retries if you have checks that take longer to run
+  # and are not in checks.yml
+  PR_MERGE_STATUS_RETRIES: "60" # 10 sec sleep between status pulls
 
 permissions:
   contents: read
@@ -243,7 +251,8 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          for attempt in {1..60}; do
+          retry_limit="${PR_MERGE_RETRY_ATTEMPTS:-60}"
+          for attempt in $(seq 1 "$retry_limit"); do
             data=$(gh pr view ${{ needs.create-pr.outputs.pr_number }} \
               --repo "$GITHUB_REPOSITORY" \
               --json state,mergeCommit \
@@ -282,7 +291,7 @@ jobs:
         run: npm run build --if-present
 
       - name: Publish package via Trusted Publishing
-        run: npm publish --provenance --access public
+        run: npm publish --provenance
 
       - name: Create GitHub Release
         env:
@@ -292,3 +301,106 @@ jobs:
           gh release create "v$VERSION" \
             --title "v$VERSION" \
             --notes-file release-notes.out
+
+  final_check:
+    name: Check Outcome
+    needs:
+      - evaluate-release
+      - stage-release
+      - release-checks
+      - release-status
+      - create-pr
+      - publish
+    if: always()
+    runs-on: ubuntu-latest
+    env:
+      RELEASE_VERSION: ${{ needs.evaluate-release.outputs.version }}
+      BASE_BRANCH: ${{ needs.evaluate-release.outputs.base_branch }}
+      TEMP_BRANCH: ${{ needs.stage-release.outputs.temp_branch }}
+      PR_NUMBER: ${{ needs.create-pr.outputs.pr_number }}
+      PR_URL: ${{ needs.create-pr.outputs.pr_url }}
+      RELEASE_NOTES: ${{ needs.stage-release.outputs.notes }}
+      EVALUATE_RESULT: ${{ needs.evaluate-release.result }}
+      STAGE_RESULT: ${{ needs.stage-release.result }}
+      CHECKS_RESULT: ${{ needs.release-checks.result }}
+      STATUS_RESULT: ${{ needs.release-status.result }}
+      CREATE_PR_RESULT: ${{ needs.create-pr.result }}
+      PUBLISH_RESULT: ${{ needs.publish.result }}
+    steps:
+      - name: Summarize outcome
+        run: |
+          set -eo pipefail
+
+          if [ -z "$RELEASE_VERSION" ]; then
+            echo "No release was needed. If this was unexpected, review the Evaluate Release job logs."
+            exit 0
+          fi
+
+          echo "Detected release version v$RELEASE_VERSION"
+
+          if [ "$PUBLISH_RESULT" = "success" ]; then
+            echo "✅ Release automation completed successfully."
+            exit 0
+          fi
+
+          echo
+          echo "::group::Next steps"
+
+          if [ "$CREATE_PR_RESULT" = "success" ] && [ -n "$PR_NUMBER" ]; then
+            echo "The release PR ($PR_URL) merged, but the Publish job did not finish."
+            echo
+            echo "To finish publishing v$RELEASE_VERSION manually:"
+            echo "  1. Ensure your local ${BASE_BRANCH:-main} is current:"
+            echo "       git checkout ${BASE_BRANCH:-main}"
+            echo "       git pull"
+            echo "  2. Fetch the merged commit produced by the release PR:"
+            echo "       git fetch origin"
+            echo "       MERGE_SHA=\$(gh pr view $PR_NUMBER --repo \"$GITHUB_REPOSITORY\" --json mergeCommit --jq '.mergeCommit.oid')"
+            echo "       git checkout \"$MERGE_SHA\""
+            echo "       git status --short"
+            echo "     (If MERGE_SHA is empty, wait for the PR to finish merging or rerun the workflow.)"
+            echo "  3. Install dependencies and rebuild (if needed):"
+            echo "       npm ci"
+            echo "       npm run build --if-present"
+            echo "  4. Publish the package from the merge commit:"
+            echo "       npm publish"
+            echo "     If the command exits with an error stating the version already exists, note that the publish already happened and proceed to the next step."
+            echo "  5. Save the release notes from the PR description into a local file (for example, release-notes.out) and create the GitHub release:"
+            echo "       gh release create \"v$RELEASE_VERSION\" --title \"v$RELEASE_VERSION\" --notes-file release-notes.out"
+            if [ -n "$RELEASE_NOTES" ]; then
+              echo
+              echo "----- Suggested release notes -----"
+              printf '%s\n' "$RELEASE_NOTES"
+              echo "----------------------------------"
+              echo "(Copy the block above into release-notes.out if you need a starting point.)"
+            fi
+            echo
+            echo "  6. Switch back to ${BASE_BRANCH:-main} and verify the branch is up to date:"
+            echo "       git checkout ${BASE_BRANCH:-main}"
+            echo "       git pull"
+            if [ -n "$TEMP_BRANCH" ]; then
+              echo "  7. Confirm the temporary branch ($TEMP_BRANCH) is deleted in GitHub (it should have been removed automatically)."
+            fi
+            echo
+            echo "After confirming npm and the GitHub release are correct, announce the release as usual."
+          else
+            echo "The automation stopped before the release PR could merge."
+            echo "Review the failing job(s):"
+            printf '  - Evaluate Release: %s\n' "$EVALUATE_RESULT"
+            printf '  - Prepare Release Branch: %s\n' "$STAGE_RESULT"
+            printf '  - Checks: %s\n' "$CHECKS_RESULT"
+            printf '  - Sync Checks Status: %s\n' "$STATUS_RESULT"
+            printf '  - Release PR: %s\n' "$CREATE_PR_RESULT"
+            printf '  - Publish: %s\n' "$PUBLISH_RESULT"
+            echo
+            if [ "$CREATE_PR_RESULT" = "success" ] && [ -n "$PR_NUMBER" ]; then
+              echo "An open release PR exists at $PR_URL. Resolve the failing jobs, then close the PR without merging."
+            fi
+            if [ "$STAGE_RESULT" = "success" ] && [ -n "$TEMP_BRANCH" ]; then
+              echo "The temporary branch ($TEMP_BRANCH) is still in the repository. Delete it after investigation:"
+              echo "       git push origin --delete $TEMP_BRANCH"
+            fi
+            echo "Once fixes are in place, re-run the Start Release workflow."
+          fi
+
+          echo "::endgroup::"
