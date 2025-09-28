@@ -70,10 +70,23 @@ async function listJobs(octokit, { owner, repo, runId }) {
 
   const jobs = [];
   for await (const { data } of iterator) {
-    if (!data || !Array.isArray(data.jobs)) {
+    if (!data) {
       throw new Error("Unexpected response shape when listing workflow jobs.");
     }
-    jobs.push(...data.jobs);
+
+    const pageJobs = Array.isArray(data)
+      ? data
+      : Array.isArray(data.jobs)
+        ? data.jobs
+        : Array.isArray(data.workflow_jobs)
+          ? data.workflow_jobs
+          : null;
+
+    if (!pageJobs) {
+      throw new Error("Unexpected response shape when listing workflow jobs.");
+    }
+
+    jobs.push(...pageJobs);
   }
   return jobs;
 }

@@ -6,10 +6,10 @@ const {
   determineState,
 } = require("../scripts/sync-check-statuses.js");
 
-function createOctokitStub(jobPages) {
+function createOctokitStub(pages) {
   const iterator = async function* () {
-    for (const jobs of jobPages) {
-      yield { data: { jobs } };
+    for (const data of pages) {
+      yield { data };
     }
   };
 
@@ -48,7 +48,7 @@ describe("scripts/sync-check-statuses", function () {
       { name: "evaluate-release", status: "completed", conclusion: "success" },
       { name: "Checks / Tests", status: "completed", conclusion: "failure" },
     ];
-    const { stub: octokit } = createOctokitStub([jobs]);
+    const { stub: octokit } = createOctokitStub([{ jobs }]);
 
     const result = await syncCheckStatuses({
       env: baseEnv,
@@ -72,7 +72,7 @@ describe("scripts/sync-check-statuses", function () {
     const jobs = [
       { name: "evaluate-release", status: "completed", conclusion: "success" },
     ];
-    const { stub: octokit } = createOctokitStub([jobs]);
+    const { stub: octokit } = createOctokitStub([{ jobs }]);
 
     const result = await syncCheckStatuses({
       env: baseEnv,
@@ -92,5 +92,25 @@ describe("scripts/sync-check-statuses", function () {
     expect(
       determineState({ status: "completed", conclusion: "action_required" }),
     ).to.equal("pending");
+  });
+
+  it("supports array-shaped pagination responses from Octokit", async function () {
+    const jobs = [
+      { name: "Checks / Build", status: "completed", conclusion: "success" },
+    ];
+    const arrayPage = Object.assign([...jobs], {
+      total_count: jobs.length,
+      workflow_jobs: jobs,
+    });
+    const { stub: octokit } = createOctokitStub([arrayPage]);
+
+    const result = await syncCheckStatuses({
+      env: baseEnv,
+      argv: ["node", "script"],
+      octokit,
+    });
+
+    expect(result.published).to.equal(1);
+    expect(octokit.repos.createCommitStatus.calledOnce).to.be.true;
   });
 });
