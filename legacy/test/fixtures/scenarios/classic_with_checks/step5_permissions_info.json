@@ -1,3 +1,0 @@
-{
-  "PAT_ADMIN": { "endpoint": "https://api.github.com/repos/example/classic-repo/collaborators/owner/permission", "status_code": 200, "ok": true, "data": { "permission": "admin" } }
-}
