@@ -31,6 +31,7 @@ jobs:
       notes: ${{ steps.capture_release_notes.outputs.notes }}
       base_branch: ${{ steps.capture_branch.outputs.base_branch }}
       evaluated_sha: ${{ steps.capture_sha.outputs.evaluated_sha }}
+      semantic_release_log: ${{ steps.determine_version.outputs.semantic_release_log }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v5
@@ -49,7 +50,14 @@ jobs:
         env:
           release_step: create_release_files
         run: |
-          npx semantic-release --no-ci --dry-run --extends ./release.config.js
+          npx semantic-release --no-ci --dry-run --extends ./release.config.js 2>&1 | tee semantic-release.log
+          status=$?
+          SEM_REL_LOG=$(cat semantic-release.log)
+          printf 'semantic_release_log<<EOF\n%s\nEOF\n' "$SEM_REL_LOG" >> "$GITHUB_OUTPUT"
+          if [ $status -ne 0 ]; then
+            exit $status
+          fi
+
           if [ -f version.txt ]; then
             VERSION=$(cat version.txt)
             echo "version=$VERSION" >> $GITHUB_OUTPUT
@@ -326,20 +334,24 @@ jobs:
       STATUS_RESULT: ${{ needs.release-status.result }}
       CREATE_PR_RESULT: ${{ needs.create-pr.result }}
       PUBLISH_RESULT: ${{ needs.publish.result }}
+      SEMANTIC_RELEASE_LOG: ${{ needs.evaluate-release.outputs.semantic_release_log }}
     steps:
       - name: Summarize outcome
         run: |
           set -eo pipefail
 
           if [ -z "$RELEASE_VERSION" ]; then
-            echo "No release was needed. If this was unexpected, review the Evaluate Release job logs."
+            if [ -n "$SEMANTIC_RELEASE_LOG" ]; then
+              echo "::group::semantic-release output"
+              printf '%s\n' "$SEMANTIC_RELEASE_LOG"
+              echo "::endgroup::"
+            else
+              echo "Semantic-release output was not captured; review the Evaluate Release job logs."
+            fi
             exit 0
           fi
 
-          echo "Detected release version v$RELEASE_VERSION"
-
           if [ "$PUBLISH_RESULT" = "success" ]; then
-            echo "✅ Release automation completed successfully."
             exit 0
           fi
 
