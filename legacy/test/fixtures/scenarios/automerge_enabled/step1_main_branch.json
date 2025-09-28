@@ -1,3 +1,0 @@
-{
-  "PAT_ADMIN": { "endpoint": "https://api.github.com/repos/example/auto-merge", "status_code": 200, "ok": true, "data": { "private": false, "default_branch": "main", "allow_auto_merge": true, "permissions": { "admin": true, "push": true } } }
-}
