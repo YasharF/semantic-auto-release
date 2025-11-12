@@ -45,7 +45,7 @@
     "@octokit/rest": "^22.0.1",
     "@semantic-release/commit-analyzer": "^13.0.1",
     "@semantic-release/release-notes-generator": "^14.1.0",
-    "semantic-release": "^25.0.1"
+    "semantic-release": "^25.0.2"
   },
   "devDependencies": {
     "c8": "^10.1.3",
