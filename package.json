@@ -40,7 +40,7 @@
     ".github/*": "prettier --check"
   },
   "dependencies": {
-    "@commitlint/cli": "^20.4.2",
+    "@commitlint/cli": "^20.4.3",
     "@commitlint/config-conventional": "^20.4.2",
     "@octokit/rest": "^22.0.1",
     "@semantic-release/commit-analyzer": "^13.0.1",
