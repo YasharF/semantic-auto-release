@@ -54,7 +54,7 @@
     "lint-staged": "^17.0.8",
     "mocha": "^11.7.6",
     "prettier": "^3.9.6",
-    "prettier-plugin-sh": "^0.18.1",
+    "prettier-plugin-sh": "^0.19.0",
     "sinon": "^22.1.0"
   },
   "publishConfig": {
