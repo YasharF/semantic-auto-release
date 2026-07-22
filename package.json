@@ -55,7 +55,7 @@
     "mocha": "^11.7.6",
     "prettier": "^3.9.4",
     "prettier-plugin-sh": "^0.18.1",
-    "sinon": "^22.0.0"
+    "sinon": "^22.1.0"
   },
   "publishConfig": {
     "access": "public"
